@@ -1,0 +1,8 @@
+{
+  "name": "GxEPD2",
+  "version": "1.6.6-fastbw",
+  "description": "GxEPD2 with FastFreshBWOnColor modifications for 3-color e-paper fast B/W partial refresh",
+  "keywords": "epaper, eink, gxepd2, partial refresh",
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}

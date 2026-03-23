@@ -1,0 +1,6 @@
+.pio
+.vscode/
+QWeather-Icons-1.8.0
+node_modules
+data/icons
+.DS_Store
