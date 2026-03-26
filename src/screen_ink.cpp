@@ -924,7 +924,7 @@ void drawTodoList() {
       currentGroupKey = itemGroupKey;
 
       // Prepare date string
-      char dateStr[32] = "无\n截\n止\n日"; // Default for no date
+      char dateStr[32] = "无\n截\n止\n日\n期"; // Default for no date
       if (itemGroupKey != UINT64_MAX) {
         // Extract Month/Day from item.dueInfo or recalculate?
         // item.dueSortKey format: YYYYMMDDHHmm

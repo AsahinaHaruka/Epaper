@@ -569,6 +569,14 @@ void setup() {
   sensor.begin(SHT_SDA, SHT_SCL);
   cachedSensorData = sensor.read();
 
+  // 如果不是首次冷启动，说明RTC时间有效。而在全局刷新和网络请求完成前，会有一段较长的延迟。
+  // 因此唤醒后立刻利用局部刷新将时间更新，给用户最及时的反馈。
+  if (wakeup_reason != ESP_SLEEP_WAKEUP_UNDEFINED) {
+    setenv("TZ", "CST-8", 1);
+    tzset();
+    updateClockOnly();
+  }
+
   // Check if user wants to enter config mode (only on initial boot)
   bool forceConfig = false;
   if (wakeup_reason == ESP_SLEEP_WAKEUP_UNDEFINED) {
