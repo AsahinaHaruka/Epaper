@@ -35,17 +35,9 @@ int readBatteryVoltage() {
   digitalWrite(WAKE_IO_PIN, HIGH);
   delay(50); // 等待电压稳定
 
-  // 多次采样取平均（消除抖动）
-  uint32_t rawTotal = 0;
-  const int samples = 10;
-  for (int i = 0; i < samples; i++) {
-    rawTotal += analogRead(BAT_ADC_PIN);
-    delay(2);
-  }
-  uint32_t rawAvg = rawTotal / samples;
-
   // 也用 analogReadMilliVolts 获取校准后电压
   uint32_t mvTotal = 0;
+  const int samples = 10;
   for (int i = 0; i < samples; i++) {
     mvTotal += analogReadMilliVolts(BAT_ADC_PIN);
     delay(2);
@@ -58,7 +50,7 @@ int readBatteryVoltage() {
   // 电池电压 = 引脚电压 × 2（分压比 10k:10k）
   int batteryMv = pinMv * 2;
 
-  Serial.printf("Battery ADC raw: %d, pin: %dmV, bat: %dmV (%.2fV)\n", rawAvg,
+Serial.printf("Battery ADC pin: %dmV, bat: %dmV (%.2fV)\n", 
                 pinMv, batteryMv, batteryMv / 1000.0);
 
   return batteryMv;
@@ -72,7 +64,7 @@ int readBatteryPercent() {
   int cellMv = readBatteryVoltage(); // 已经是实际电池电压 mV
 
   // 基于锂电池放电曲线的查找表（mV → %）
-  struct {
+  static const struct {
     int mv;
     int pct;
   } table[] = {

@@ -26,13 +26,13 @@
 
 // Sleep duration constants
 #define MINUTE_IN_SECONDS 60
-#define HOUR_IN_SECONDS 3600
+#define HOUR_IN_SECONDS 60*45
 #define LOW_BATTERY_SLEEP_SEC 3600
 #define RETRY_SLEEP_SEC 60
 #define ERROR_RETRY_SLEEP_SEC 600
 
 // RTC memory (persistent across deep sleep)
-RTC_DATA_ATTR int bootCount = 0;
+RTC_DATA_ATTR uint32_t bootCount = 0;
 RTC_DATA_ATTR time_t lastFullSync = 0;
 RTC_DATA_ATTR int cachedBatteryPct = -1; // 缓存电量百分比，仅每小时刷新
 
@@ -512,6 +512,7 @@ void setup() {
   Serial.begin(115200);
 
   ++bootCount;
+  Serial.println("BootCount: " + String(bootCount));
 
   // Determine wakeup cause early for fast-path decision
   esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
@@ -528,7 +529,6 @@ void setup() {
     // FAST PATH: MINUTE UPDATE (Partial screen refresh - clock only)
     // No WiFi, no sensor, no battery check — just update the clock
     // ==================================================================
-    Serial.println("=== MINUTE UPDATE ===");
 
     // 深度睡眠后时区环境变量丢失，需要重新设置
     setenv("TZ", "CST-8", 1);
