@@ -592,6 +592,7 @@ void setup() {
   // Setup WiFi
   if (!setupWiFi(forceConfig)) {
     Serial.println("WiFi setup failed");
+    si_warning("WiFi连接失败\n\n10分钟后重试");
     go_sleep(ERROR_RETRY_SLEEP_SEC);
   }
 
@@ -609,9 +610,15 @@ void setup() {
     go_sleep(RETRY_SLEEP_SEC);
   }
 
-  // Update last sync time
-  time(&now);
-  lastFullSync = now;
+  if (todo_status() == 4) {
+    Serial.println("Todo fetch timed out, scheduling retry in 10 minutes");
+    time(&now);
+    lastFullSync = now - HOUR_IN_SECONDS + 600;
+  } else {
+    // Update last sync time
+    time(&now);
+    lastFullSync = now;
+  }
 
   // Calculate sleep duration until next minute boundary
   struct tm timeinfo;

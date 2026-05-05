@@ -345,7 +345,7 @@ void draw_cal_days() {
       u8g2Fonts.setFont(FONT_SUB);
       const char *marker = holidayType > 0 ? "休" : "班";
       u8g2Fonts.setForegroundColor(holidayType > 0 ? GxEPD_RED : GxEPD_BLACK);
-      u8g2Fonts.setCursor(x + CAL_DAY_W - 16, y + 12);
+      u8g2Fonts.setCursor(x + CAL_DAY_W - 16, y + 14);
       u8g2Fonts.print(marker);
     }
 
@@ -728,7 +728,7 @@ void drawClock(int hour, int minute) {
   u8g2Fonts.print(updateBuf);
 
   // Clock time - moved up
-  u8g2Fonts.setFont(u8g2_font_fub42_tn);
+  u8g2Fonts.setFont(u8g2_font_7Segments_26x42_mn);
   char buf[16];
   snprintf(buf, sizeof(buf), "%02d:%02d", hour, minute);
 
@@ -1147,7 +1147,7 @@ void updateClockOnly() {
   u8g2Fonts.begin(display);
 
   // Calculate strict bounding box for the clock text to minimize update
-  // time/area Font: u8g2_font_fub42_tn Y baseline is CLOCK_Y + 130 Approx
+  // time/area Font: u8g2_font_7Segments_26x42_mn Y baseline is CLOCK_Y + 130 Approx
   // height ~50px. Let's refresh a stripe that safely covers the clock digits.
   // Move Y from 130 to 80. Top of digits roughly 80-60=20.
   int16_t partial_y = CLOCK_Y + 20;
@@ -1161,7 +1161,7 @@ void updateClockOnly() {
     // Fill the background white to erase old digits
     display.fillRect(CLOCK_X, partial_y, CLOCK_W, partial_h, GxEPD_WHITE);
 
-    u8g2Fonts.setFont(u8g2_font_fub42_tn);
+    u8g2Fonts.setFont(u8g2_font_7Segments_26x42_mn);
     u8g2Fonts.setFontMode(1); // Transparent mode
     u8g2Fonts.setForegroundColor(GxEPD_BLACK);
     u8g2Fonts.setBackgroundColor(GxEPD_WHITE);

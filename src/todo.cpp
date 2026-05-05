@@ -13,6 +13,7 @@
 // 状态管理
 // ============================================================================
 static int8_t _todo_status = -1;
+static bool _todo_is_timeout = false;
 static TodoData _todo_data = {};
 
 // Device code flow 信息
@@ -33,6 +34,7 @@ static String _ms_tenant_id;
  */
 static String refreshAccessToken(const String &refreshToken) {
   HTTPClient http;
+  http.setTimeout(20000);
   WiFiClientSecure client;
   client.setInsecure();
 
@@ -54,6 +56,8 @@ static String refreshAccessToken(const String &refreshToken) {
       "&scope=https%3A%2F%2Fgraph.microsoft.com%2FTasks.Read%20offline_access";
 
   int httpCode = http.POST(body);
+  if (httpCode < 0) _todo_is_timeout = true;
+  
   if (httpCode != HTTP_CODE_OK) {
     Serial.printf("[Todo] Token refresh failed: %d\n", httpCode);
     Serial.println(http.getString());
@@ -94,6 +98,7 @@ static String refreshAccessToken(const String &refreshToken) {
  */
 static String deviceCodeFlow() {
   HTTPClient http;
+  http.setTimeout(20000);
   WiFiClientSecure client;
   client.setInsecure();
 
@@ -113,6 +118,8 @@ static String deviceCodeFlow() {
       "_access";
 
   int httpCode = http.POST(body);
+  if (httpCode < 0) _todo_is_timeout = true;
+  
   if (httpCode != HTTP_CODE_OK) {
     Serial.printf("[Todo] Device code request failed: %d\n", httpCode);
     Serial.println(http.getString());
@@ -169,6 +176,7 @@ static String deviceCodeFlow() {
     Serial.printf("[Todo] Polling... heap=%d\n", ESP.getFreeHeap());
 
     HTTPClient tokenHttp;
+    tokenHttp.setTimeout(20000);
     WiFiClientSecure tokenClient;
     tokenClient.setInsecure();
 
@@ -185,6 +193,7 @@ static String deviceCodeFlow() {
         deviceCodeStr;
 
     int code = tokenHttp.POST(tokenBody);
+    if (code < 0) _todo_is_timeout = true;
     String tokenResp = tokenHttp.getString();
     tokenHttp.end();
     tokenClient.stop();
@@ -260,6 +269,7 @@ static String getAccessToken() {
  */
 static bool fetchTasks(const String &accessToken) {
   HTTPClient http;
+  http.setTimeout(20000);
   WiFiClientSecure client;
   client.setInsecure();
 
@@ -274,6 +284,8 @@ static bool fetchTasks(const String &accessToken) {
 
   http.addHeader("Authorization", "Bearer " + accessToken);
   int httpCode = http.GET();
+  if (httpCode < 0) _todo_is_timeout = true;
+  
   if (httpCode != HTTP_CODE_OK) {
     Serial.printf("[Todo] Get lists failed: %d\n", httpCode);
     http.end();
@@ -318,6 +330,7 @@ static bool fetchTasks(const String &accessToken) {
 
     http.addHeader("Authorization", "Bearer " + accessToken);
     int taskCode = http.GET();
+    if (taskCode < 0) _todo_is_timeout = true;
 
     if (taskCode == HTTP_CODE_OK) {
       String taskResp = http.getString();
@@ -464,6 +477,7 @@ static bool fetchTasks(const String &accessToken) {
 
 void todo_exec() {
   _todo_status = 0;
+  _todo_is_timeout = false;
 
   if (!WiFi.isConnected()) {
     _todo_status = 2;
@@ -489,6 +503,11 @@ void todo_exec() {
 
   // 获取 access token
   String accessToken = getAccessToken();
+  if (_todo_is_timeout) {
+    _todo_status = 4;
+    Serial.println(F("[Todo] Token request timed out"));
+    return;
+  }
   if (accessToken.length() == 0) {
     Serial.println(F("[Todo] Failed to get access token"));
     if (_todo_status != 3)
@@ -502,8 +521,8 @@ void todo_exec() {
     _todo_status = 1;
     Serial.println(F("[Task] todo fetch success"));
   } else {
-    _todo_status = 2;
-    Serial.println(F("[Task] todo fetch failed"));
+    _todo_status = _todo_is_timeout ? 4 : 2;
+    Serial.println(F("[Task] todo fetch failed or timed out"));
   }
 }
 
