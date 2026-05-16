@@ -9,12 +9,12 @@
 #include "_preference.h"
 #include "battery.h"
 #include "config.h"
+#include "countdown.h"
 #include "display_driver.h" // Display globals
 #include "screen_ink.h"
 #include "todo.h"
 #include "version.h"
 #include "weather.h"
-#include "countdown.h"
 #include "wiring.h"
 
 // Configuration timeout constants
@@ -26,7 +26,7 @@
 
 // Sleep duration constants
 #define MINUTE_IN_SECONDS 60
-#define HOUR_IN_SECONDS 60*45
+#define HOUR_IN_SECONDS 60 * 45
 #define LOW_BATTERY_SLEEP_SEC 3600
 #define RETRY_SLEEP_SEC 60
 #define ERROR_RETRY_SLEEP_SEC 600
@@ -55,7 +55,8 @@ WiFiManagerParameter para_ms_tenant_id("ms_tenant_id", "MS Todo Tenant ID",
                                        "consumers", 48);
 WiFiManagerParameter para_cd_url("cd_url", "倒数日URL(不填则用本地)", "", 64);
 WiFiManagerParameter para_cd_local("cd_local",
-    "本地倒计日(分号分隔: MM-DD,名称,农历0/1)", "", 200);
+                                   "本地倒计日(分号分隔: MM-DD,名称,农历0/1)",
+                                   "", 200);
 SensorManager sensor;
 
 // Flag to track if config was saved
@@ -152,11 +153,13 @@ void loadSavedConfig() {
         "ms_tenant_id", "MS Todo Tenant ID", ms_tenant_id.c_str(), 48);
   }
   if (cd_url.length() > 0) {
-    new (&para_cd_url) WiFiManagerParameter("cd_url", "倒数日URL(不填则用本地)", cd_url.c_str(), 64);
+    new (&para_cd_url) WiFiManagerParameter("cd_url", "倒数日URL(不填则用本地)",
+                                            cd_url.c_str(), 64);
   }
   if (cd_local.length() > 0) {
-    new (&para_cd_local) WiFiManagerParameter("cd_local",
-        "本地倒计日(分号分隔: MM-DD,名称,农历0/1)", cd_local.c_str(), 200);
+    new (&para_cd_local) WiFiManagerParameter(
+        "cd_local", "本地倒计日(分号分隔: MM-DD,名称,农历0/1)",
+        cd_local.c_str(), 200);
   }
 
   Serial.println("Loaded saved configuration:");
@@ -508,7 +511,6 @@ void print_wakeup_reason() {
 // ============================================================================
 
 void setup() {
-  delay(10);
   Serial.begin(115200);
 
   ++bootCount;
@@ -599,7 +601,7 @@ void setup() {
   // Start SNTP background request immediately after WiFi connects
   startNTPTimeSync();
 
-  // 更新电量缓存（每小时仅一次）
+  // 更新电量缓存（每次full sync都会更新）
   cachedBatteryPct = readBatteryPercent();
   Serial.printf("Battery: %d%%\n", cachedBatteryPct);
 

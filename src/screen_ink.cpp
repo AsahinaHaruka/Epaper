@@ -232,7 +232,7 @@ void draw_cal_year_info() {
                       ICON_TEMPERATURE_W, ICON_TEMPERATURE_H, GxEPD_BLACK);
   u8g2Fonts.setCursor(col3X, row1Y);
   if (indoor.valid) {
-    u8g2Fonts.setForegroundColor(indoor.temperature > 30.0 ? GxEPD_RED
+    u8g2Fonts.setForegroundColor(indoor.temperature >= 35.0 ? GxEPD_RED
                                                            : GxEPD_BLACK);
     u8g2Fonts.printf("%.1f°C", indoor.temperature);
     u8g2Fonts.setForegroundColor(GxEPD_BLACK);
@@ -258,7 +258,7 @@ void draw_cal_year_info() {
                       ICON_TEMPERATURE_W, ICON_TEMPERATURE_H, GxEPD_BLACK);
   u8g2Fonts.setCursor(col3X, row2Y);
   if (weather_status() == 1) {
-    u8g2Fonts.setForegroundColor(weather->temp > 30 ? GxEPD_RED : GxEPD_BLACK);
+    u8g2Fonts.setForegroundColor(weather->temp >= 35 ? GxEPD_RED : GxEPD_BLACK);
     u8g2Fonts.printf("%d°C", weather->temp);
     u8g2Fonts.setForegroundColor(GxEPD_BLACK);
   } else {
@@ -526,7 +526,7 @@ void draw_weather_panel() {
 
     // Row 1: 体感
     drawLabel(detailY, "体感: ");
-    u8g2Fonts.setForegroundColor(wNow->feelsLike > 30 ? GxEPD_RED
+    u8g2Fonts.setForegroundColor(wNow->feelsLike >= 35 ? GxEPD_RED
                                                       : GxEPD_BLACK);
     u8g2Fonts.printf("%d°C", wNow->feelsLike);
 
@@ -560,8 +560,7 @@ void draw_weather_panel() {
     detailY += lineH;
     u8g2Fonts.setForegroundColor(GxEPD_BLACK);
     drawLabel(detailY, "预报: ");
-    u8g2Fonts.setForegroundColor(
-        (today.tempMin > 30 || today.tempMax > 30) ? GxEPD_RED : GxEPD_BLACK);
+    u8g2Fonts.setForegroundColor(today.tempMax >= 35 ? GxEPD_RED : GxEPD_BLACK);
     u8g2Fonts.printf("%s %d°C～%d°C %s %d级", today.textDay.c_str(),
                      today.tempMin, today.tempMax, today.windDirDay.c_str(),
                      today.windScaleDay);
@@ -615,8 +614,7 @@ void draw_weather_panel() {
     int16_t detailY = y + (halfH - totalTextH) / 2 + 10; // +10 for baseline
 
     // Row 1: 温度
-    u8g2Fonts.setForegroundColor(
-        (day.tempMin > 30 || day.tempMax > 30) ? GxEPD_RED : GxEPD_BLACK);
+    u8g2Fonts.setForegroundColor(day.tempMax >= 35 ? GxEPD_RED : GxEPD_BLACK);
     u8g2Fonts.setCursor(detailX, detailY);
     u8g2Fonts.printf("温度：%d°C～%d°C", day.tempMin, day.tempMax);
 

@@ -14,18 +14,22 @@ bool getHolidays(Holiday &result, int year, int month)
     Serial.printf("Requesting: %s\n", req.c_str());
 
     // 2. 配置 HTTPS 安全客户端
+    HTTPClient http;
+    http.setTimeout(15 * 1000); // 15秒超时
+    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS); // 启用重定向支持
+    http.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+    http.addHeader("Accept", "application/json");
+    
     WiFiClientSecure client;
     client.setInsecure(); // 关键：跳过证书验证，否则 HTTPS 会连接失败
 
-    HTTPClient http;
-    http.setTimeout(10 * 1000); // 10秒超时
 
     // 3. 启动连接 (传入 client)
     if (!http.begin(client, req))
     {
         Serial.println("Connection failed!");
         return false;
-    }
+    } 
 
     int httpCode = http.GET();
 
