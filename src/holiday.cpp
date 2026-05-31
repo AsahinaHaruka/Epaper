@@ -7,8 +7,18 @@
 
 // 获取当月假期信息。数组中数字为当月日期，正为休假，负为补工作日
 // https://timor.tech/api/holiday/
+
+RTC_DATA_ATTR static Holiday cachedHoliday = {0, 0, {0}, 0};
+
 bool getHolidays(Holiday &result, int year, int month)
 {
+    if (cachedHoliday.year == year && cachedHoliday.month == month)
+    {
+        result = cachedHoliday;
+        Serial.printf("Using cached holidays for %d-%d\n", year, month);
+        return true;
+    }
+
     // 1. 构建 URL
     String req = "https://timor.tech/api/holiday/year/" + String(year) + "-" + String(month);
     Serial.printf("Requesting: %s\n", req.c_str());
@@ -90,6 +100,8 @@ bool getHolidays(Holiday &result, int year, int month)
     }
     Serial.println();
     result.length = i;
+
+    cachedHoliday = result;
 
     return true;
 }

@@ -233,7 +233,7 @@ void draw_cal_year_info() {
   u8g2Fonts.setCursor(col3X, row1Y);
   if (indoor.valid) {
     u8g2Fonts.setForegroundColor(indoor.temperature >= 35.0 ? GxEPD_RED
-                                                           : GxEPD_BLACK);
+                                                            : GxEPD_BLACK);
     u8g2Fonts.printf("%.1f°C", indoor.temperature);
     u8g2Fonts.setForegroundColor(GxEPD_BLACK);
   } else {
@@ -527,7 +527,7 @@ void draw_weather_panel() {
     // Row 1: 体感
     drawLabel(detailY, "体感: ");
     u8g2Fonts.setForegroundColor(wNow->feelsLike >= 35 ? GxEPD_RED
-                                                      : GxEPD_BLACK);
+                                                       : GxEPD_BLACK);
     u8g2Fonts.printf("%d°C", wNow->feelsLike);
 
     // Row 2: 当前风力 (使用实时数据)
@@ -561,8 +561,8 @@ void draw_weather_panel() {
     u8g2Fonts.setForegroundColor(GxEPD_BLACK);
     drawLabel(detailY, "预报: ");
     u8g2Fonts.setForegroundColor(today.tempMax >= 35 ? GxEPD_RED : GxEPD_BLACK);
-    u8g2Fonts.printf("%s %d°C～%d°C %s %d级", today.textDay.c_str(),
-                     today.tempMin, today.tempMax, today.windDirDay.c_str(),
+    u8g2Fonts.printf("%s %d～%d°C %s%d级", today.textDay.c_str(), today.tempMin,
+                     today.tempMax, today.windDirDay.c_str(),
                      today.windScaleDay);
 
     // Row 6: 分钟级降水
@@ -570,8 +570,30 @@ void draw_weather_panel() {
     u8g2Fonts.setForegroundColor(GxEPD_BLACK);
     if (wMinutely->summary.length() > 0) {
       int16_t labelW = u8g2Fonts.getUTF8Width("空气: ");
+
+      int splitBytes = 0;
+      for (int i = 0; i < 17 && wMinutely->summary[splitBytes]; i++) {
+        uint8_t c = wMinutely->summary[splitBytes];
+        if (c < 0x80)
+          splitBytes += 1;
+        else if (c < 0xE0)
+          splitBytes += 2;
+        else if (c < 0xF0)
+          splitBytes += 3;
+        else
+          splitBytes += 4;
+      }
+
+      String text1 = wMinutely->summary.substring(0, splitBytes);
       u8g2Fonts.setCursor(labelX - labelW, detailY);
-      u8g2Fonts.print(wMinutely->summary.c_str());
+      u8g2Fonts.print(text1.c_str());
+
+      if (splitBytes < wMinutely->summary.length()) {
+        String text2 = wMinutely->summary.substring(splitBytes);
+        detailY += lineH;
+        u8g2Fonts.setCursor(labelX - labelW, detailY);
+        u8g2Fonts.print(text2.c_str());
+      }
     }
     // The Bottom-right location/update time has been moved to drawClock()
   }
@@ -1145,9 +1167,9 @@ void updateClockOnly() {
   u8g2Fonts.begin(display);
 
   // Calculate strict bounding box for the clock text to minimize update
-  // time/area Font: u8g2_font_7Segments_26x42_mn Y baseline is CLOCK_Y + 130 Approx
-  // height ~50px. Let's refresh a stripe that safely covers the clock digits.
-  // Move Y from 130 to 80. Top of digits roughly 80-60=20.
+  // time/area Font: u8g2_font_7Segments_26x42_mn Y baseline is CLOCK_Y + 130
+  // Approx height ~50px. Let's refresh a stripe that safely covers the clock
+  // digits. Move Y from 130 to 80. Top of digits roughly 80-60=20.
   int16_t partial_y = CLOCK_Y + 20;
   int16_t partial_h = 70; // 20 to 90 covers the 80 baseline text
 
@@ -1199,4 +1221,3 @@ void si_warning(const char *str) {
   display.powerOff();
   // display.hibernate(); // Don't hibernate
 }
-
