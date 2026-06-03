@@ -511,8 +511,28 @@ void draw_weather_panel() {
     int16_t labelX = detailX + 48;
     int16_t valueX = detailX + 50;
 
-    // There are 6 detail rows.
-    int numRows = 6;
+    // Calculate the number of detail rows dynamically
+    int numRows = 5; // Rows 1-5 (体感, 风力, 降水, 空气, 预报) are always present
+    int splitBytes = 0;
+    bool hasMinutely = (wMinutely->summary.length() > 0);
+    if (hasMinutely) {
+      numRows++; // baseline row for minutely summary
+      for (int i = 0; i < 17 && wMinutely->summary[splitBytes]; i++) {
+        uint8_t c = wMinutely->summary[splitBytes];
+        if (c < 0x80)
+          splitBytes += 1;
+        else if (c < 0xE0)
+          splitBytes += 2;
+        else if (c < 0xF0)
+          splitBytes += 3;
+        else
+          splitBytes += 4;
+      }
+      if (splitBytes < wMinutely->summary.length()) {
+        numRows++; // second row when wrapped
+      }
+    }
+
     int totalTextH = numRows * lineH;
     int16_t detailY = y + (WEATHER_PANEL_H - totalTextH) / 2 +
                       10; // +10 to align baseline roughly center
@@ -567,23 +587,10 @@ void draw_weather_panel() {
                      today.windScaleDay);
 
     // Row 6: 分钟级降水
-    detailY += lineH;
-    u8g2Fonts.setForegroundColor(GxEPD_BLACK);
-    if (wMinutely->summary.length() > 0) {
+    if (hasMinutely) {
+      detailY += lineH;
+      u8g2Fonts.setForegroundColor(GxEPD_BLACK);
       int16_t labelW = u8g2Fonts.getUTF8Width("空气: ");
-
-      int splitBytes = 0;
-      for (int i = 0; i < 17 && wMinutely->summary[splitBytes]; i++) {
-        uint8_t c = wMinutely->summary[splitBytes];
-        if (c < 0x80)
-          splitBytes += 1;
-        else if (c < 0xE0)
-          splitBytes += 2;
-        else if (c < 0xF0)
-          splitBytes += 3;
-        else
-          splitBytes += 4;
-      }
 
       String text1 = wMinutely->summary.substring(0, splitBytes);
       u8g2Fonts.setCursor(labelX - labelW, detailY);
