@@ -850,16 +850,15 @@ void drawTodoList() {
   int16_t areaRight = CLOCK_X + CLOCK_W - 5;
   int16_t availH = areaBot - areaTop;
 
-  // === No tasks: Draw mountain + sun illustration ===
+  // === No tasks: Upper half has illustration + text, lower half has weather
+  // temperature trend chart ===
   if (!todos || todos->count == 0) {
-    // Center the illustration in the TODO area
     int16_t centerX = CLOCK_X + CLOCK_W / 2;
-    int16_t centerY =
-        areaTop + availH / 2 - 30; // Shift up to leave room for text
+    int16_t centerY = 205; // Shifted and scaled to fit the smaller top region
 
     // Scale factor: SVG viewBox was 284x264 at coords (128,188)-(412,452)
-    // We want ~180px wide illustration
-    float scale = 0.64f;
+    // We want a smaller ~108px wide illustration to fit the reduced height
+    float scale = 0.45f;
     // Origin offset: translate SVG coords to screen coords
     int16_t ox =
         centerX - (int16_t)(270 * scale); // Center around SVG midpoint ~270
@@ -886,31 +885,141 @@ void drawTodoList() {
       display.drawLine(sx(250), sy(370) + d, sx(270), sy(300) + d, GxEPD_BLACK);
     }
 
-    // Draw Sun (Red) - circle at SVG(370, 230) r=40
-    int16_t sunCX = sx(370);
-    int16_t sunCY = sy(230);
+    // Draw Sun (Red) - circle at SVG(390, 255) r=40
+    int16_t sunCX = sx(390);
+    int16_t sunCY = sy(255);
     int16_t sunR = (int16_t)(40 * scale);
     display.drawCircle(sunCX, sunCY, sunR, GxEPD_RED);
     display.drawCircle(sunCX, sunCY, sunR - 1, GxEPD_RED);
     display.drawCircle(sunCX, sunCY, sunR + 1, GxEPD_RED);
 
-    // Text line 1: "今日无待办" (centered, below illustration)
-    int16_t textY = sy(450) + 28;
-    u8g2Fonts.setFont(FONT_TEXT);
+    // Text line 1: "今日无待办" (placed at mountain bottom baseline sy(450))
+    int16_t textY = sy(450);
+    u8g2Fonts.setFont(FONT_SUB);
     u8g2Fonts.setForegroundColor(GxEPD_BLACK);
     const char *line1 = "今日无待办";
     int16_t tw1 = u8g2Fonts.getUTF8Width(line1);
     u8g2Fonts.setCursor(centerX - tw1 / 2, textY);
     u8g2Fonts.print(line1);
 
-    // Text line 2: "Enjoy your day" (centered, smaller font)
-    textY += 22;
+    // Text line 2: "Enjoy your day" (placed below mountain baseline)
+    textY += 16;
     u8g2Fonts.setFont(FONT_SUB);
     u8g2Fonts.setForegroundColor(GxEPD_BLACK);
     const char *line2 = "Enjoy your day";
     int16_t tw2 = u8g2Fonts.getUTF8Width(line2);
     u8g2Fonts.setCursor(centerX - tw2 / 2, textY);
     u8g2Fonts.print(line2);
+
+    // Horizontal Split Line (moved up to 262 to shrink the no-tasks area and
+    // maximize space)
+    display.drawFastHLine(CLOCK_X + 20, 262, CLOCK_W - 40, GxEPD_BLACK);
+
+    // --- Lower Half: Weather and Temperature trend ---
+    DailyForecast *wFc = weather_data_daily();
+    if (weather_status() == 1 && wFc && wFc->length >= 3) {
+      // 3 columns: today, tomorrow, day after
+      int16_t colX[3] = {(int16_t)(CLOCK_X + 52), (int16_t)(CLOCK_X + 156),
+                         (int16_t)(CLOCK_X + 260)};
+      const char *labels[3] = {"今天", "明天", "后天"};
+
+      // 1. Draw labels, icons, weather text
+      LittleFS.begin(true);
+      u8g2Fonts.setFont(
+          FONT_TEXT); // Enlarged from FONT_SUB to FONT_TEXT (16px)
+      for (int i = 0; i < 3; i++) {
+        // Label (今天/明天/后天)
+        u8g2Fonts.setForegroundColor(GxEPD_BLACK);
+        int16_t lw = u8g2Fonts.getUTF8Width(labels[i]);
+        u8g2Fonts.setCursor(colX[i] - lw / 2, 278);
+        u8g2Fonts.print(labels[i]);
+
+        // Icon
+        drawWeatherBitmap(colX[i] - 12, 288, wFc->weather[i].iconDay, 24,
+                          GxEPD_RED);
+
+        // Weather text
+        u8g2Fonts.setForegroundColor(GxEPD_BLACK);
+        int16_t tw = u8g2Fonts.getUTF8Width(wFc->weather[i].textDay.c_str());
+        u8g2Fonts.setCursor(colX[i] - tw / 2,
+                            328); // Adjusted baseline to Y=328 for larger font
+        u8g2Fonts.print(wFc->weather[i].textDay.c_str());
+      }
+      LittleFS.end();
+
+      // 2. Draw temperature line chart
+      // Find min and max temp over 3 days
+      int8_t maxT = -127;
+      int8_t minT = 127;
+      for (int i = 0; i < 3; i++) {
+        if (wFc->weather[i].tempMax > maxT)
+          maxT = wFc->weather[i].tempMax;
+        if (wFc->weather[i].tempMin < minT)
+          minT = wFc->weather[i].tempMin;
+      }
+
+      int16_t chartTopY = 365;
+      int16_t chartBotY = 425;
+      int16_t chartH = chartBotY - chartTopY;
+
+      auto getY = [&](int8_t t) -> int16_t {
+        if (maxT == minT)
+          return chartTopY + chartH / 2;
+        return chartBotY - (t - minT) * chartH / (maxT - minT);
+      };
+
+      int16_t yMax[3], yMin[3];
+      for (int i = 0; i < 3; i++) {
+        yMax[i] = getY(wFc->weather[i].tempMax);
+        yMin[i] = getY(wFc->weather[i].tempMin);
+      }
+
+      // Draw high temp lines (Red)
+      display.drawLine(colX[0], yMax[0], colX[1], yMax[1], GxEPD_RED);
+      display.drawLine(colX[0], yMax[0] + 1, colX[1], yMax[1] + 1, GxEPD_RED);
+      display.drawLine(colX[1], yMax[1], colX[2], yMax[2], GxEPD_RED);
+      display.drawLine(colX[1], yMax[1] + 1, colX[2], yMax[2] + 1, GxEPD_RED);
+
+      // Draw low temp lines (Black)
+      display.drawLine(colX[0], yMin[0], colX[1], yMin[1], GxEPD_BLACK);
+      display.drawLine(colX[0], yMin[0] + 1, colX[1], yMin[1] + 1, GxEPD_BLACK);
+      display.drawLine(colX[1], yMin[1], colX[2], yMin[2], GxEPD_BLACK);
+      display.drawLine(colX[1], yMin[1] + 1, colX[2], yMin[2] + 1, GxEPD_BLACK);
+
+      // Draw points and values
+      u8g2Fonts.setFont(u8g2_font_fub11_tr); // Enlarged to 13px bold font
+      for (int i = 0; i < 3; i++) {
+        // High temp points
+        display.fillCircle(colX[i], yMax[i], 3, GxEPD_RED);
+        u8g2Fonts.setForegroundColor(GxEPD_RED);
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%d°", wFc->weather[i].tempMax);
+        int16_t tw = u8g2Fonts.getUTF8Width(buf);
+        u8g2Fonts.setCursor(
+            colX[i] - tw / 2,
+            yMax[i] - 10); // Offset adjusted to -10 to avoid line overlap
+        u8g2Fonts.print(buf);
+
+        // Low temp points
+        display.fillCircle(colX[i], yMin[i], 3, GxEPD_BLACK);
+        u8g2Fonts.setForegroundColor(GxEPD_BLACK);
+        snprintf(buf, sizeof(buf), "%d°", wFc->weather[i].tempMin);
+        tw = u8g2Fonts.getUTF8Width(buf);
+        u8g2Fonts.setCursor(
+            colX[i] - tw / 2,
+            yMin[i] + 22); // Offset adjusted to +22 to avoid line overlap
+        u8g2Fonts.print(buf);
+      }
+    } else {
+      // Weather data unavailable fallback
+      u8g2Fonts.setFont(FONT_TEXT);
+      u8g2Fonts.setForegroundColor(GxEPD_BLACK);
+      const char *noWeatherStr = "天气数据不可用";
+      int16_t nw = u8g2Fonts.getUTF8Width(noWeatherStr);
+      u8g2Fonts.setCursor(centerX - nw / 2, 350);
+      u8g2Fonts.print(noWeatherStr);
+    }
+
     return;
   }
 
