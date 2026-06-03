@@ -417,18 +417,25 @@ static bool fetchTasks(const String &accessToken) {
               // Let's stick to original logic: if original string seemed to
               // have time, show time. We'll show the ADJUSTED time though.
 
+              bool hasTime = false;
               if (strlen(dtStr) >= 16 &&
                   !(dtStr[11] == '0' && dtStr[12] == '0' && dtStr[14] == '0' &&
                     dtStr[15] == '0')) {
+                hasTime = true;
+              }
+
+              if (hasTime) {
                 snprintf(item.dueInfo, TODO_DUE_MAX_LEN, "%d/%d %02d:%02d",
                          month, day, hour, minute);
               } else {
                 snprintf(item.dueInfo, TODO_DUE_MAX_LEN, "%d/%d", month, day);
               }
 
+              int timeVal = hasTime ? (hour * 100 + minute) : 2400;
+
               item.dueSortKey = (uint64_t)year * 100000000 +
                                 (uint64_t)month * 1000000 +
-                                (uint64_t)day * 10000 + hour * 100 + minute;
+                                (uint64_t)day * 10000 + timeVal;
             } else {
               item.dueSortKey = UINT64_MAX;
             }

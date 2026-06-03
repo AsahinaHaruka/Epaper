@@ -21,6 +21,7 @@
 // Fonts
 #define FONT_TEXT u8g2_font_wqy16_t_gb2312
 #define FONT_SUB u8g2_font_wqy12_t_gb2312
+#define FONT_TODO u8g2_font_wqy14_t_gb2312
 
 // Week day strings
 const char *week_str[] = {"日", "一", "二", "三", "四", "五", "六"};
@@ -766,14 +767,17 @@ static int16_t drawVerticalChar(int16_t x, int16_t y, const char *text,
   const uint8_t *p = (const uint8_t *)text;
   int idx = 0;
   while (*p && idx < charIdx) {
-    if (*p < 0x80)
-      p += 1;
-    else if (*p < 0xE0)
-      p += 2;
-    else if (*p < 0xF0)
-      p += 3;
-    else
-      p += 4;
+    int len = 1;
+    if (*p >= 0xF0)
+      len = 4;
+    else if (*p >= 0xE0)
+      len = 3;
+    else if (*p >= 0xC0)
+      len = 2;
+
+    for (int i = 0; i < len && *p; i++) {
+      p++;
+    }
     idx++;
   }
   if (!*p)
@@ -789,7 +793,9 @@ static int16_t drawVerticalChar(int16_t x, int16_t y, const char *text,
     len = 2;
 
   char buf[5] = {0};
-  memcpy(buf, p, len);
+  for (int i = 0; i < len && p[i]; i++) {
+    buf[i] = p[i];
+  }
 
   int16_t charW = u8g2Fonts.getUTF8Width(buf);
   u8g2Fonts.setCursor(x - charW / 2, y); // Center horizontally
@@ -803,14 +809,17 @@ static int utf8Len(const char *text) {
   int count = 0;
   const uint8_t *p = (const uint8_t *)text;
   while (*p) {
-    if (*p < 0x80)
-      p += 1;
-    else if (*p < 0xE0)
-      p += 2;
-    else if (*p < 0xF0)
-      p += 3;
-    else
-      p += 4;
+    int len = 1;
+    if (*p >= 0xF0)
+      len = 4;
+    else if (*p >= 0xE0)
+      len = 3;
+    else if (*p >= 0xC0)
+      len = 2;
+
+    for (int i = 0; i < len && *p; i++) {
+      p++;
+    }
     count++;
   }
   return count;
@@ -1007,28 +1016,69 @@ void drawTodoList() {
     if (curX - colW < areaLeft)
       break;
 
-    int16_t itemCX = curX - colW / 2;
-    u8g2Fonts.setFont(FONT_SUB);
+    bool hasTime =
+        (itemGroupKey != UINT64_MAX && (item.dueSortKey % 10000) != 2400);
+    int16_t timeReserveH = hasTime ? 16 : 0;
+
+    int16_t charsPerCol = (availH - timeReserveH) / charH;
+    int titleLen = utf8Len(item.title);
+    int numCols = (titleLen + charsPerCol - 1) / charsPerCol;
+    if (numCols <= 0)
+      numCols = 1;
+    if (numCols > 3)
+      numCols = 3;
+
+    // Check if we hit the left edge
+    int fitCols = (curX - areaLeft) / colW;
+    if (fitCols <= 0)
+      break;
+    if (numCols > fitCols)
+      numCols = fitCols;
+
+    int16_t itemStartX = curX;
+    int charIdx = 0;
+
     u8g2Fonts.setForegroundColor(item.important ? GxEPD_RED : GxEPD_BLACK);
 
-    // Draw Title vertically
-    // Max chars?
-    int16_t maxTitleChars = availH / charH;
-    int titleLen = utf8Len(item.title);
-    int charsToShow = titleLen < maxTitleChars ? titleLen : maxTitleChars;
-    int16_t titleY = areaTop + charH;
+    for (int col = 0; col < numCols; col++) {
+      int16_t itemCX = curX - colW / 2;
+      int16_t titleY = areaTop + charH;
 
-    for (int c = 0; c < charsToShow; c++) {
-      drawVerticalChar(itemCX, titleY + c * charH, item.title, c);
+      int charsInThisCol = charsPerCol;
+      bool isLastCol = (col == numCols - 1);
+      if (isLastCol && titleLen > numCols * charsPerCol) {
+        charsInThisCol = charsPerCol - 1; // reserve 1 for ellipsis
+      }
+
+      u8g2Fonts.setFont(FONT_TODO);
+      for (int c = 0; c < charsInThisCol && charIdx < titleLen; c++) {
+        drawVerticalChar(itemCX, titleY + c * charH, item.title, charIdx);
+        charIdx++;
+      }
+
+      if (isLastCol && charIdx < titleLen) {
+        u8g2Fonts.setCursor(itemCX - 3, titleY + charsInThisCol * charH);
+        u8g2Fonts.print(":"); // vertical ellipsis equivalent
+      }
+
+      curX -= colW;
     }
 
-    // Ellipsis
-    if (titleLen > maxTitleChars) {
-      u8g2Fonts.setCursor(itemCX - 3, titleY + charsToShow * charH);
-      u8g2Fonts.print(":");
-    }
+    if (hasTime) {
+      int hh = (item.dueSortKey % 10000) / 100;
+      int mm = (item.dueSortKey % 100);
+      char timeStr[8];
+      snprintf(timeStr, sizeof(timeStr), "%02d:%02d", hh, mm);
 
-    curX -= colW;
+      u8g2Fonts.setFont(FONT_SUB);
+      u8g2Fonts.setForegroundColor(GxEPD_BLACK);
+
+      int16_t tw = u8g2Fonts.getUTF8Width(timeStr);
+      int16_t center_x = itemStartX - (numCols * colW) / 2;
+
+      u8g2Fonts.setCursor(center_x - tw / 2, areaBot - 2);
+      u8g2Fonts.print(timeStr);
+    }
   }
 }
 

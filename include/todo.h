@@ -5,8 +5,8 @@
 
 // 最多存储的待办项数
 #define TODO_MAX_ITEMS 20
-// 每个待办标题最大字节数 (UTF-8中文约3字节/字，18字≈54字节+余量)
-#define TODO_TITLE_MAX_LEN 80
+// 每个待办标题最大字节数 (UTF-8中文约3字节/字)
+#define TODO_TITLE_MAX_LEN 210
 // 截止时间/日期
 #define TODO_DUE_MAX_LEN 16
 
