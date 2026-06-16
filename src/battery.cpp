@@ -20,9 +20,6 @@
 
 #include "wiring.h"
 
-// 记录上次电量，RTC_DATA_ATTR 保证在 ESP32 深度休眠（Deep Sleep）期间数据不丢失
-RTC_DATA_ATTR int g_last_battery_percent = -1;
-
 /**
  * 获取电池电压（mV）
  * 硬件: WAKE_IO(GPIO25) HIGH → 开启分压电路 → GPIO36读取 → WAKE_IO LOW
@@ -63,8 +60,8 @@ int readBatteryVoltage() {
   // 电池电压 = 引脚电压 × 2（分压比 10k:10k）
   int batteryMv = pinMv * 2;
 
-  Serial.printf("Battery ADC pin: %dmV, bat: %dmV (%.2fV)\n", 
-                pinMv, batteryMv, batteryMv / 1000.0);
+  Serial.printf("Battery ADC pin: %dmV, bat: %dmV (%.2fV)\n", pinMv, batteryMv,
+                batteryMv / 1000.0);
 
   return batteryMv;
 }
@@ -97,30 +94,12 @@ int readBatteryPercent() {
     for (int i = 0; i < n - 1; i++) {
       if (cellMv >= table[i + 1].mv) {
         // 线性插值
-        current_percent = table[i + 1].pct + (cellMv - table[i + 1].mv) *
-                                      (table[i].pct - table[i + 1].pct) /
-                                      (table[i].mv - table[i + 1].mv);
+        current_percent =
+            table[i + 1].pct + (cellMv - table[i + 1].mv) *
+                                   (table[i].pct - table[i + 1].pct) /
+                                   (table[i].mv - table[i + 1].mv);
         break;
       }
-    }
-  }
-
-  // 2. 加入“防回弹（只降不升）”逻辑
-  if (g_last_battery_percent == -1) {
-    g_last_battery_percent = current_percent;
-  } else {
-    // 如果测到的新电量比历史电量大，判定为负载停止后的电压回弹，不予采纳
-    if (current_percent > g_last_battery_percent) {
-        // 兼容充电的情况：只有当电量跃升大于一定阈值（比如插上充电器），才允许电量上涨
-        if (current_percent - g_last_battery_percent >= 5) {
-            g_last_battery_percent = current_percent;
-        } else {
-            // 微小的回弹（如 WiFi 关闭后电压恢复），保持原电量不变
-            current_percent = g_last_battery_percent;
-        }
-    } else {
-        // 正常放电下降
-        g_last_battery_percent = current_percent;
     }
   }
 
