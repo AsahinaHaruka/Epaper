@@ -346,7 +346,7 @@ void draw_cal_days() {
       u8g2Fonts.setFont(FONT_SUB);
       const char *marker = holidayType > 0 ? "休" : "班";
       u8g2Fonts.setForegroundColor(holidayType > 0 ? GxEPD_RED : GxEPD_BLACK);
-      u8g2Fonts.setCursor(x + CAL_DAY_W - 16, y + 14);
+      u8g2Fonts.setCursor(x + CAL_DAY_W - 16, y + 16);
       u8g2Fonts.print(marker);
     }
 
@@ -512,7 +512,8 @@ void draw_weather_panel() {
     int16_t valueX = detailX + 50;
 
     // Calculate the number of detail rows dynamically
-    int numRows = 5; // Rows 1-5 (体感, 风力, 降水, 空气, 预报) are always present
+    int numRows =
+        5; // Rows 1-5 (体感, 风力, 降水, 空气, 预报) are always present
     int splitBytes = 0;
     bool hasMinutely = (wMinutely->summary.length() > 0);
     if (hasMinutely) {

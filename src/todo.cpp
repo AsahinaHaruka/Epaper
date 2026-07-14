@@ -424,6 +424,11 @@ static bool fetchTasks(const String &accessToken) {
                 hasTime = true;
               }
 
+              // If the adjusted local time is 00:00, treat it as no time
+              if (hasTime && hour == 0 && minute == 0) {
+                hasTime = false;
+              }
+
               if (hasTime) {
                 snprintf(item.dueInfo, TODO_DUE_MAX_LEN, "%d/%d %02d:%02d",
                          month, day, hour, minute);
