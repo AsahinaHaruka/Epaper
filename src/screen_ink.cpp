@@ -5,7 +5,6 @@
 #include "screen_ink.h"
 #include "SensorManager.h"
 #include "_preference.h"
-#include "battery.h"
 #include "config.h"
 #include "countdown.h"
 #include "display_driver.h"
@@ -701,13 +700,17 @@ void drawClock(int hour, int minute) {
   u8g2Fonts.setForegroundColor(GxEPD_BLACK);
   u8g2Fonts.setBackgroundColor(GxEPD_WHITE);
 
-  // Battery percentage at top-right corner (使用缓存值，每小时更新)
+  // Battery percentage at top-right corner
+  // 电压在主流程 WiFi 连接前采样并写入 RTC 缓存；drawClock 随全屏刷新触发时缓存一定已有效，
+  // 不再回退实时采样以避免射频/热噪声造成的读数跳变
   extern int cachedBatteryPct;
-  int batteryPct =
-      cachedBatteryPct >= 0 ? cachedBatteryPct : readBatteryPercent();
   u8g2Fonts.setFont(FONT_TEXT); // 16px font
   char batBuf[8];
-  snprintf(batBuf, sizeof(batBuf), "%d%%", batteryPct);
+  if (cachedBatteryPct >= 0) {
+    snprintf(batBuf, sizeof(batBuf), "%d%%", cachedBatteryPct);
+  } else {
+    snprintf(batBuf, sizeof(batBuf), "--");
+  }
   int16_t batW = u8g2Fonts.getUTF8Width(batBuf);
   // Draw power icon to the left of battery text
   int16_t batTextX = CLOCK_X + CLOCK_W - batW - 4; // Right-aligned battery

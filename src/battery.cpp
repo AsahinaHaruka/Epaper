@@ -105,3 +105,32 @@ int readBatteryPercent() {
 
   return current_percent;
 }
+
+/**
+ * 把电池电压(mV)换算成电量百分比(0-100)
+ * 与 readBatteryPercent 使用同一张放电曲线查找表，但不再触发 ADC 采样，
+ * 便于复用主流程在上电早期(WiFi 开启前)已读到的干净电压，避免射频/热噪声干扰。
+ */
+int voltageToPercent(int cellMv) {
+  static const struct {
+    int mv;
+    int pct;
+  } table[] = {
+      {4150, 100}, {4080, 95}, {4000, 90}, {3930, 85}, {3870, 80},
+      {3820, 70},  {3780, 60}, {3750, 50}, {3730, 40}, {3700, 30},
+      {3680, 25},  {3650, 20}, {3600, 10}, {3550, 5},  {3300, 0},
+  };
+  const int n = sizeof(table) / sizeof(table[0]);
+
+  if (cellMv >= table[0].mv) return 100;
+  if (cellMv <= table[n - 1].mv) return 0;
+
+  for (int i = 0; i < n - 1; i++) {
+    if (cellMv >= table[i + 1].mv) {
+      return table[i + 1].pct + (cellMv - table[i + 1].mv) *
+                                    (table[i].pct - table[i + 1].pct) /
+                                    (table[i].mv - table[i + 1].mv);
+    }
+  }
+  return 0; // 不可达
+}

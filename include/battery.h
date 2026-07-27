@@ -4,4 +4,6 @@
 int readBatteryVoltage();
 int readBatteryPercent();
 
+int voltageToPercent(int cellMv);
+
 #endif

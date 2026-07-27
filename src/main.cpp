@@ -602,7 +602,8 @@ void setup() {
   startNTPTimeSync();
 
   // 更新电量缓存（每次full sync都会更新）
-  cachedBatteryPct = readBatteryPercent();
+  // 复用 WiFi 连接前读取的电压换算百分比：此时射频/热噪声最小，读数最稳
+  cachedBatteryPct = voltageToPercent(voltage);
   Serial.printf("Battery: %d%%\n", cachedBatteryPct);
 
   // Fetch weather and update display
