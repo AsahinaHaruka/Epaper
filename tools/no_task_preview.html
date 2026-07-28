@@ -72,8 +72,9 @@
       default: return "Enjoy your day";
     }
   }
-  function drawMtnRidge(d, cx, hor) {
-    const s = 0.45;
+  function drawMtnRidge(d, cx, hor, G) {
+    if (G === undefined) G = 1.0;
+    const s = 0.45 * G;
     const mx = sx => cx + (sx - 270) * s;
     const my = sy => hor + (sy - 450) * s;
     for (let dd = -1; dd <= 1; dd++) {
@@ -135,57 +136,61 @@
   }
 
   function drawScene(d,cx,cy,icon){
-    const hor=cy+34;
+    // Determine layout
+    // Base of the mountain is 'hor'. The subtitle sits on 'hor'.
+    // The main title sits above the subtitle.
+    const hor = cy + 42; // move down a bit to use more space
+    
+    // Global scaling for weather elements
+    const G = 1.33; // 0.45 -> ~0.6
+    
     switch(kind(icon)){
       case "clear": 
-        drawMtnRidge(d,cx,hor); 
-        d.fillCircle(cx-35, hor-50, 10, Eink_R);
-        d.drawLine(cx+30, hor-70, cx+34, hor-66, Eink_B); d.drawLine(cx+34, hor-66, cx+38, hor-70, Eink_B);
-        d.drawLine(cx+42, hor-65, cx+45, hor-62, Eink_B); d.drawLine(cx+45, hor-62, cx+48, hor-65, Eink_B);
+        drawMtnRidge(d,cx,hor, G); 
+        d.fillCircle(cx-35*G, hor-50*G, 10*G, Eink_R);
+        d.drawLine(cx+30*G, hor-70*G, cx+34*G, hor-66*G, Eink_B); d.drawLine(cx+34*G, hor-66*G, cx+38*G, hor-70*G, Eink_B);
+        d.drawLine(cx+42*G, hor-65*G, cx+45*G, hor-62*G, Eink_B); d.drawLine(cx+45*G, hor-62*G, cx+48*G, hor-65*G, Eink_B);
         break;
       case "clearNight":
-        drawMtnRidge(d,cx,hor);
-        d.fillCircle(cx-35, hor-50, 9, Eink_B);
-        d.fillCircle(cx-32, hor-52, 8, Eink_W);
+        drawMtnRidge(d,cx,hor, G);
+        d.fillCircle(cx-35*G, hor-50*G, 9*G, Eink_B);
+        d.fillCircle(cx-32*G, hor-52*G, 8*G, Eink_W);
         // Stars
-        d.fillRect(cx-10, hor-75, 2, 2, Eink_B);
-        d.fillRect(cx+25, hor-60, 2, 2, Eink_B);
-        d.fillRect(cx+45, hor-70, 2, 2, Eink_B);
+        d.fillRect(cx-10*G, hor-75*G, 2*G, 2*G, Eink_B);
+        d.fillRect(cx+25*G, hor-60*G, 2*G, 2*G, Eink_B);
+        d.fillRect(cx+45*G, hor-70*G, 2*G, 2*G, Eink_B);
         break;
       case "cloudy":
-        drawMtnRidge(d,cx,hor);
-        d.fillCircle(cx-42, hor-53, 9, Eink_R);
-        d.fillRect(cx-57, hor-53, 35, 15, Eink_W);
-        for(let i=0; i<3; i++) d.drawFastHLine(cx-62+i*5, hor-53+i*4, 30, Eink_B);
+        drawMtnRidge(d,cx,hor, G);
+        d.fillCircle(cx-42*G, hor-53*G, 9*G, Eink_R);
+        d.fillRect(cx-57*G, hor-53*G, 35*G, 15*G, Eink_W);
+        for(let i=0; i<3; i++) d.drawFastHLine(cx-62*G+i*5*G, hor-53*G+i*4*G, 30*G, Eink_B);
         break;
       case "overcast":
-        drawMtnRidge(d,cx,hor);
-        drawZenCloud(d, cx-25, hor-35, 1.2);
-        drawZenCloud(d, cx+25, hor-50, 0.9);
+        drawMtnRidge(d,cx,hor, G);
+        drawZenCloud(d, cx-25*G, hor-35*G, 1.2*G);
+        drawZenCloud(d, cx+25*G, hor-50*G, 0.9*G);
         break;
       case "lightRain":
-        drawMtnRidge(d,cx,hor);
-        drawZenRain(d, cx, hor, 1);
+        drawMtnRidge(d,cx,hor, G);
+        drawZenRain(d, cx, hor, 1, G);
         break;
       case "mediumRain":
-        drawMtnRidge(d,cx,hor);
-        drawZenRain(d, cx, hor, 2);
+        drawMtnRidge(d,cx,hor, G);
+        drawZenRain(d, cx, hor, 2, G);
         break;
       case "heavyRain":
-        drawMtnRidge(d,cx,hor);
-        drawZenRain(d, cx, hor, 3);
+        drawMtnRidge(d,cx,hor, G);
+        drawZenRain(d, cx, hor, 3, G);
         break;
       case "thunder":
-        drawMtnRidge(d,cx,hor);
-        // Striking bold lightning bolt
-        d.drawLine(cx-30, hor-80, cx-10, hor-65, Eink_R);
-        d.drawLine(cx-10, hor-65, cx-20, hor-65, Eink_R);
-        d.drawLine(cx-20, hor-65, cx+5,  hor-35, Eink_R);
-        // Thicken the top parts of the bolt for a tapering effect
-        d.drawLine(cx-29, hor-80, cx-9, hor-65, Eink_R);
-        d.drawLine(cx-9,  hor-65, cx-19, hor-65, Eink_R);
-        d.drawLine(cx-31, hor-80, cx-11, hor-65, Eink_R);
-        // Rain lines
+        drawMtnRidge(d,cx,hor, G);
+        d.drawLine(cx-30*G, hor-80*G, cx-10*G, hor-65*G, Eink_R);
+        d.drawLine(cx-10*G, hor-65*G, cx-20*G, hor-65*G, Eink_R);
+        d.drawLine(cx-20*G, hor-65*G, cx+5*G,  hor-35*G, Eink_R);
+        d.drawLine(cx-29*G, hor-80*G, cx-9*G, hor-65*G, Eink_R);
+        d.drawLine(cx-9*G,  hor-65*G, cx-19*G, hor-65*G, Eink_R);
+        d.drawLine(cx-31*G, hor-80*G, cx-11*G, hor-65*G, Eink_R);
         const th_rain = [
           [-50, -70, 15], [-40, -50, 10], [-55, -30, 15],
           [-20, -75, 18], [-10, -45, 12],
@@ -193,48 +198,59 @@
           [ 40, -60, 15], [ 30, -35, 12], [ 50, -40, 12]
         ];
         for(let [rx, ry, rl] of th_rain) {
-          let dx = Math.round(rl * 0.6);
-          d.drawLine(cx + rx, hor + ry, cx + rx - dx, hor + ry + rl, Eink_B);
+          let dx = Math.round(rl * G * 0.6);
+          d.drawLine(cx + rx*G, hor + ry*G, cx + rx*G - dx, hor + ry*G + rl*G, Eink_B);
         }
         break;
       case "snow":
-        drawMtnRidge(d,cx,hor);
+        drawMtnRidge(d,cx,hor, G);
         {
-          const s = 0.45;
+          const s = 0.45 * G;
           const px = cx, py = hor + (300-450)*s;
-          d.drawLine(px-14, py+9, px-4, py+1, Eink_W);
-          d.drawLine(px-4, py+1, px+6, py+10, Eink_W);
-          d.drawFastHLine(px-14, py+9, 20, Eink_W);
+          d.drawLine(px-14*G, py+9*G, px-4*G, py+1*G, Eink_W);
+          d.drawLine(px-4*G, py+1*G, px+6*G, py+10*G, Eink_W);
+          d.drawFastHLine(px-14*G, py+9*G, 20*G, Eink_W);
         }
-        drawZenFlake(d, cx-40, hor-60, 4);
-        drawZenFlake(d, cx-20, hor-45, 3);
-        drawZenFlake(d, cx+10, hor-50, 4);
-        drawZenFlake(d, cx+40, hor-65, 3);
-        drawZenFlake(d, cx-10, hor-70, 3);
+        drawZenFlake(d, cx-40*G, hor-60*G, 4*G);
+        drawZenFlake(d, cx-20*G, hor-45*G, 3*G);
+        drawZenFlake(d, cx+10*G, hor-50*G, 4*G);
+        drawZenFlake(d, cx+40*G, hor-65*G, 3*G);
+        drawZenFlake(d, cx-10*G, hor-70*G, 3*G);
         break;
       case "fog":
-        drawMtnRidge(d,cx,hor);
-        // Obscure the middle of the mountain to let the peak peek out, exposing the left peak below it
-        d.fillRect(cx - 55, hor - 58, 110, 23, Eink_W); // Erases hor-58 to hor-35
-        // Fog/haze layers
-        d.drawFastHLine(cx - 45, hor - 34, 40, Eink_B);
-        d.drawFastHLine(cx + 10, hor - 37, 35, Eink_B);
-        d.drawFastHLine(cx - 20, hor - 45, 50, Eink_B);
-        d.drawFastHLine(cx - 10, hor - 51, 40, Eink_B);
-        d.drawFastHLine(cx - 30, hor - 57, 30, Eink_B);
-        d.drawFastHLine(cx +  5, hor - 55, 25, Eink_B);
+        drawMtnRidge(d,cx,hor, G);
+        d.fillRect(cx - 55*G, hor - 58*G, 110*G, 23*G, Eink_W);
+        d.drawFastHLine(cx - 45*G, hor - 34*G, 40*G, Eink_B);
+        d.drawFastHLine(cx + 10*G, hor - 37*G, 35*G, Eink_B);
+        d.drawFastHLine(cx - 20*G, hor - 45*G, 50*G, Eink_B);
+        d.drawFastHLine(cx - 10*G, hor - 51*G, 40*G, Eink_B);
+        d.drawFastHLine(cx - 30*G, hor - 57*G, 30*G, Eink_B);
+        d.drawFastHLine(cx +  5*G, hor - 55*G, 25*G, Eink_B);
         break;
       case "sand":
-        d.drawLine(cx-60, hor-25, cx-20, hor-35, Eink_B); d.drawLine(cx-20, hor-35, cx+60, hor-10, Eink_B);
-        d.drawLine(cx-60, hor-10, cx+10, hor-25, Eink_B); d.drawLine(cx+10, hor-25, cx+60, hor-5, Eink_B);
-        for(let i=0; i<5; i++) d.drawFastHLine(cx-50+i*15, hor-60+i*8, 20, Eink_R);
-        // Note: Horizon line and Red Seal have been removed to not obscure the text below.
+        // Special case: sand dunes are placed differently. Text can just sit at hor.
+        {
+          const hor_old = cy + 34;
+          d.drawLine(cx-60*G, hor_old-25*G, cx-20*G, hor_old-35*G, Eink_B); d.drawLine(cx-20*G, hor_old-35*G, cx+60*G, hor_old-10*G, Eink_B);
+          d.drawLine(cx-60*G, hor_old-10*G, cx+10*G, hor_old-25*G, Eink_B); d.drawLine(cx+10*G, hor_old-25*G, cx+60*G, hor_old-5*G, Eink_B);
+          for(let i=0; i<5; i++) d.drawFastHLine(cx-50*G+i*15*G, hor_old-60*G+i*8*G, 20*G, Eink_R);
+        }
         break;
-      default: drawMtnRidge(d,cx,hor); break;
+      default: drawMtnRidge(d,cx,hor, G); break;
     }
-    const hor0=cy+34;
-    d.text("今日无待办",cx,hor0,Eink_B,13);
-    d.text(subtitle(icon),cx,hor0+16,Eink_B,12);
+    
+    // Draw text
+    if (kind(icon) === "sand") {
+      const hor0 = cy + 34;
+      d.text("今日无待办", cx, hor0 + 3, Eink_B, 13);
+      d.text(subtitle(icon), cx, hor0 + 19, Eink_B, 12);
+    } else {
+      // subtitle bottom is at 'hor', main text is above it.
+      // 'hor' is the mountain base.
+      d.text(subtitle(icon), cx, hor + 3, Eink_B, 12);
+      d.text("今日无待办", cx, hor - 13, Eink_B, 16); // Larger font
+    }
+    
     d.drawFastHLine(20,TITLE_Y_BASE-SCREEN_BASE,PANEL_W-40,Eink_B);
   }
   const cases = [

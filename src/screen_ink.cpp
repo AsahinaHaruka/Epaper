@@ -701,7 +701,8 @@ void drawClock(int hour, int minute) {
   u8g2Fonts.setBackgroundColor(GxEPD_WHITE);
 
   // Battery percentage at top-right corner
-  // 电压在主流程 WiFi 连接前采样并写入 RTC 缓存；drawClock 随全屏刷新触发时缓存一定已有效，
+  // 电压在主流程 WiFi 连接前采样并写入 RTC 缓存；drawClock
+  // 随全屏刷新触发时缓存一定已有效，
   // 不再回退实时采样以避免射频/热噪声造成的读数跳变
   extern int cachedBatteryPct;
   u8g2Fonts.setFont(FONT_TEXT); // 16px font
@@ -874,116 +875,116 @@ enum NoTodoWeatherKind {
 
 static NoTodoWeatherKind noTaskWeather(uint16_t icon) {
   switch (icon) {
-    case 100:
-      return kClear;
-    case 150:
-      return kClearNight;
-    case 101:
-    case 102:
-    case 103:
-    case 151:
-    case 152:
-    case 153:
-      return kCloudy;
-    case 104:
-      return kOvercast;
-    case 300:
-    case 305:
-    case 309:
-    case 314:
-      return kLightRain;
-    case 306:
-    case 399:
-      return kMediumRain;
-    case 301:
-    case 307:
-    case 308:
-    case 315:
-    case 316:
-    case 317:
-    case 318:
-      return kHeavyRain;
-    case 302:
-    case 303:
-    case 304:
-    case 310:
-    case 311:
-    case 312:
-    case 313:
-      return kThunder;
-    case 350:
-    case 351:
-    case 400:
-    case 401:
-    case 402:
-    case 403:
-    case 404:
-    case 405:
-    case 406:
-    case 407:
-    case 408:
-    case 409:
-    case 410:
-    case 456:
-    case 457:
-    case 499:
-      return kSnow;
-    case 500:
-    case 501:
-    case 502:
-    case 509:
-    case 510:
-      return kFog;
-    case 503:
-    case 504:
-    case 507:
-    case 508:
-    case 511:
-    case 512:
-    case 513:
-    case 514:
-    case 515:
-      return kSand;
-    default:
-      return kUnknown;
+  case 100:
+    return kClear;
+  case 150:
+    return kClearNight;
+  case 101:
+  case 102:
+  case 103:
+  case 151:
+  case 152:
+  case 153:
+    return kCloudy;
+  case 104:
+    return kOvercast;
+  case 300:
+  case 305:
+  case 309:
+  case 314:
+    return kLightRain;
+  case 306:
+  case 399:
+    return kMediumRain;
+  case 301:
+  case 307:
+  case 308:
+  case 315:
+  case 316:
+  case 317:
+  case 318:
+    return kHeavyRain;
+  case 302:
+  case 303:
+  case 304:
+  case 310:
+  case 311:
+  case 312:
+  case 313:
+    return kThunder;
+  case 350:
+  case 351:
+  case 400:
+  case 401:
+  case 402:
+  case 403:
+  case 404:
+  case 405:
+  case 406:
+  case 407:
+  case 408:
+  case 409:
+  case 410:
+  case 456:
+  case 457:
+  case 499:
+    return kSnow;
+  case 500:
+  case 501:
+  case 502:
+  case 509:
+  case 510:
+    return kFog;
+  case 503:
+  case 504:
+  case 507:
+  case 508:
+  case 511:
+  case 512:
+  case 513:
+  case 514:
+  case 515:
+    return kSand;
+  default:
+    return kUnknown;
   }
 }
 
 // Subtitle shown under "今日无待办".
 static const char *noTaskSubtitle(uint16_t icon) {
   switch (noTaskWeather(icon)) {
-    case kClear:
-      return "阳光正好，轻松一下";
-    case kClearNight:
-      return "月色温柔，安然入梦";
-    case kCloudy:
-      return "云淡风轻，悠闲一天";
-    case kOvercast:
-      return "天色阴沉，慢享时光";
-    case kLightRain:
-      return "窗外细雨，适合休息";
-    case kMediumRain:
-      return "雨声淅沥，适合休息";
-    case kHeavyRain:
-      return "雨大风急，安心在家";
-    case kThunder:
-      return "雷雨交加，安心在家";
-    case kSnow:
-      return "雪花轻落，万物静谧";
-    case kFog:
-      return "雾气朦胧，慢度时光";
-    case kSand:
-      return "风沙漫天，缩进屋中";
-    default:
-      return "Enjoy your day";
+  case kClear:
+    return "阳光正好，轻松一下";
+  case kClearNight:
+    return "月色温柔，安然入梦";
+  case kCloudy:
+    return "云淡风轻，悠闲一天";
+  case kOvercast:
+    return "天色阴沉，慢享时光";
+  case kLightRain:
+    return "窗外细雨，适合休息";
+  case kMediumRain:
+    return "雨声淅沥，适合休息";
+  case kHeavyRain:
+    return "雨大风急，安心在家";
+  case kThunder:
+    return "雷雨交加，安心在家";
+  case kSnow:
+    return "雪花轻落，万物静谧";
+  case kFog:
+    return "雾气朦胧，慢度时光";
+  case kSand:
+    return "风沙漫天，缩进屋中";
+  default:
+    return "Enjoy your day";
   }
 }
 
 // Mountain ridge silhouette, drawn at the bottom of the scene.
 // Same geometry as the original single scene: SVG points mapped at scale 0.45,
 // with SVG x=270 aligned to cx and SVG y=450 (the base) aligned to horizonY.
-static void drawMtnRidge(int16_t cx, int16_t horizonY) {
-  const float s = 0.45f;
+static void drawMtnRidge(int16_t cx, int16_t horizonY, float G = 1.0f) {
+  const float s = 0.45f * G;
   auto mx = [&](int sx) { return cx + (int16_t)((sx - 270) * s); };
   auto my = [&](int sy) { return horizonY + (int16_t)((sy - 450) * s); };
 
@@ -1010,17 +1011,18 @@ static void drawNoTaskSnowflake(int16_t x, int16_t y, float s, uint16_t col) {
   display.drawLine(x - s07, y + s07, x + s07, y - s07, col);
 }
 
-// Zen outline cloud drawn with line segments, scalable to match mountain aesthetic
+// Zen outline cloud drawn with line segments, scalable to match mountain
+// aesthetic
 static void drawZenCloud(int16_t cx, int16_t cyb, float s = 1.0f) {
   auto dx = [&](float val) { return (int16_t)(val * s + 0.5f); };
   auto dy = [&](float val) { return cyb - (int16_t)(val * s + 0.5f); };
-  
+
   // Erase interior with white shapes so mountain doesn't show through
   display.fillCircle(cx - dx(14), dy(6), dx(7), GxEPD_WHITE);
   display.fillCircle(cx, dy(10), dx(10), GxEPD_WHITE);
   display.fillCircle(cx + dx(14), dy(6), dx(7), GxEPD_WHITE);
   display.fillRect(cx - dx(15), dy(8), dx(30), dx(9), GxEPD_WHITE);
-  
+
   // Draw outline
   display.drawLine(cx - dx(18), cyb, cx + dx(18), cyb, GxEPD_BLACK);
   display.drawLine(cx - dx(18), cyb, cx - dx(24), dy(4), GxEPD_BLACK);
@@ -1034,167 +1036,215 @@ static void drawZenCloud(int16_t cx, int16_t cyb, float s = 1.0f) {
   display.drawLine(cx + dx(24), dy(5), cx + dx(18), cyb, GxEPD_BLACK);
 }
 
-static void drawZenRain(int16_t cx, int16_t hor, int intensity) {
+static void drawZenRain(int16_t cx, int16_t hor, int intensity,
+                        float G = 1.0f) {
   int16_t rain[16][3] = {
-    {-45, -50, 10}, {-10, -65, 12}, { 10, -45, 15}, { 30, -35, 12}
-  };
+      {-45, -50, 10}, {-10, -65, 12}, {10, -45, 15}, {30, -35, 12}};
   int count = 4;
   if (intensity >= 2) {
-    rain[4][0] = -30; rain[4][1] = -75; rain[4][2] = 18;
-    rain[5][0] =  -5; rain[5][1] = -40; rain[5][2] = 15;
-    rain[6][0] =  35; rain[6][1] = -60; rain[6][2] = 15;
-    rain[7][0] = -50; rain[7][1] = -30; rain[7][2] = 15;
+    rain[4][0] = -30;
+    rain[4][1] = -75;
+    rain[4][2] = 18;
+    rain[5][0] = -5;
+    rain[5][1] = -40;
+    rain[5][2] = 15;
+    rain[6][0] = 35;
+    rain[6][1] = -60;
+    rain[6][2] = 15;
+    rain[7][0] = -50;
+    rain[7][1] = -30;
+    rain[7][2] = 15;
     count = 8;
   }
   if (intensity >= 3) {
-    rain[8][0] = -55; rain[8][1] = -70; rain[8][2] = 15;
-    rain[9][0] = -25; rain[9][1] = -45; rain[9][2] = 12;
-    rain[10][0] = -35; rain[10][1] = -20; rain[10][2] = 10;
-    rain[11][0] = -15; rain[11][1] = -15; rain[11][2] = 8;
-    rain[12][0] =  15; rain[12][1] = -70; rain[12][2] = 20;
-    rain[13][0] =   5; rain[13][1] = -25; rain[13][2] = 10;
-    rain[14][0] =  55; rain[14][1] = -65; rain[14][2] = 18;
-    rain[15][0] =  50; rain[15][1] = -40; rain[15][2] = 12;
+    rain[8][0] = -55;
+    rain[8][1] = -70;
+    rain[8][2] = 15;
+    rain[9][0] = -25;
+    rain[9][1] = -45;
+    rain[9][2] = 12;
+    rain[10][0] = -35;
+    rain[10][1] = -20;
+    rain[10][2] = 10;
+    rain[11][0] = -15;
+    rain[11][1] = -15;
+    rain[11][2] = 8;
+    rain[12][0] = 15;
+    rain[12][1] = -70;
+    rain[12][2] = 20;
+    rain[13][0] = 5;
+    rain[13][1] = -25;
+    rain[13][2] = 10;
+    rain[14][0] = 55;
+    rain[14][1] = -65;
+    rain[14][2] = 18;
+    rain[15][0] = 50;
+    rain[15][1] = -40;
+    rain[15][2] = 12;
     count = 16;
   }
   for (int i = 0; i < count; i++) {
     int16_t rx = rain[i][0];
     int16_t ry = rain[i][1];
     int16_t rl = rain[i][2];
-    int16_t dx = (int16_t)(rl * 0.6f + 0.5f);
-    display.drawLine(cx + rx, hor + ry, cx + rx - dx, hor + ry + rl, GxEPD_BLACK);
+    int16_t dx = (int16_t)(rl * G * 0.6f + 0.5f);
+    display.drawLine(cx + rx * G, hor + ry * G, cx + rx * G - dx,
+                     hor + ry * G + rl * G, GxEPD_BLACK);
   }
 }
 
 // Draw one of several "no task" landscapes depending on the live weather.
 // cx,cy is the scene center (matches the original centerX,centerY).
-static void drawNoTaskIllustration(int16_t cx, int16_t cy, uint16_t icon) {
-  int16_t horizonY = cy + 34;
+static void drawNoTaskIllustration(int16_t cx, int16_t cy, int16_t horizonY,
+                                   uint16_t icon) {
+  float G = 1.33f;
 
   switch (noTaskWeather(icon)) {
-    case kClear: {
-      drawMtnRidge(cx, horizonY);
-      // Red Sun
-      display.fillCircle(cx - 35, horizonY - 50, 10, GxEPD_RED);
-      // Birds flying
-      display.drawLine(cx + 30, horizonY - 70, cx + 34, horizonY - 66, GxEPD_BLACK);
-      display.drawLine(cx + 34, horizonY - 66, cx + 38, horizonY - 70, GxEPD_BLACK);
-      display.drawLine(cx + 42, horizonY - 65, cx + 45, horizonY - 62, GxEPD_BLACK);
-      display.drawLine(cx + 45, horizonY - 62, cx + 48, horizonY - 65, GxEPD_BLACK);
-      break;
+  case kClear: {
+    drawMtnRidge(cx, horizonY, G);
+    // Red Sun
+    display.fillCircle(cx - 35 * G, horizonY - 50 * G, 10 * G, GxEPD_RED);
+    // Birds flying
+    display.drawLine(cx + 30 * G, horizonY - 70 * G, cx + 34 * G,
+                     horizonY - 66 * G, GxEPD_BLACK);
+    display.drawLine(cx + 34 * G, horizonY - 66 * G, cx + 38 * G,
+                     horizonY - 70 * G, GxEPD_BLACK);
+    display.drawLine(cx + 42 * G, horizonY - 65 * G, cx + 45 * G,
+                     horizonY - 62 * G, GxEPD_BLACK);
+    display.drawLine(cx + 45 * G, horizonY - 62 * G, cx + 48 * G,
+                     horizonY - 65 * G, GxEPD_BLACK);
+    break;
+  }
+  case kClearNight: {
+    drawMtnRidge(cx, horizonY, G);
+    // Crescent Moon
+    display.fillCircle(cx - 35 * G, horizonY - 50 * G, 9 * G, GxEPD_BLACK);
+    display.fillCircle(cx - 32 * G, horizonY - 52 * G, 8 * G, GxEPD_WHITE);
+    // Stars
+    display.fillRect(cx - 10 * G, horizonY - 75 * G, 2 * G, 2 * G, GxEPD_BLACK);
+    display.fillRect(cx + 25 * G, horizonY - 60 * G, 2 * G, 2 * G, GxEPD_BLACK);
+    display.fillRect(cx + 45 * G, horizonY - 70 * G, 2 * G, 2 * G, GxEPD_BLACK);
+    break;
+  }
+  case kCloudy: {
+    drawMtnRidge(cx, horizonY, G);
+    display.fillCircle(cx - 42 * G, horizonY - 53 * G, 9 * G, GxEPD_RED);
+    display.fillRect(cx - 57 * G, horizonY - 53 * G, 35 * G, 15 * G,
+                     GxEPD_WHITE);
+    for (int i = 0; i < 3; i++) {
+      display.drawFastHLine(cx - 62 * G + i * 5 * G,
+                            horizonY - 53 * G + i * 4 * G, 30 * G, GxEPD_BLACK);
     }
-    case kClearNight: {
-      drawMtnRidge(cx, horizonY);
-      // Crescent Moon
-      display.fillCircle(cx - 35, horizonY - 50, 9, GxEPD_BLACK);
-      display.fillCircle(cx - 32, horizonY - 52, 8, GxEPD_WHITE);
-      // Stars
-      display.fillRect(cx - 10, horizonY - 75, 2, 2, GxEPD_BLACK);
-      display.fillRect(cx + 25, horizonY - 60, 2, 2, GxEPD_BLACK);
-      display.fillRect(cx + 45, horizonY - 70, 2, 2, GxEPD_BLACK);
-      break;
+    break;
+  }
+  case kOvercast: {
+    drawMtnRidge(cx, horizonY, G);
+    drawZenCloud(cx - 25 * G, horizonY - 35 * G, 1.2f * G);
+    drawZenCloud(cx + 25 * G, horizonY - 50 * G, 0.9f * G);
+    break;
+  }
+  case kLightRain: {
+    drawMtnRidge(cx, horizonY, G);
+    drawZenRain(cx, horizonY, 1, G);
+    break;
+  }
+  case kMediumRain: {
+    drawMtnRidge(cx, horizonY, G);
+    drawZenRain(cx, horizonY, 2, G);
+    break;
+  }
+  case kHeavyRain: {
+    drawMtnRidge(cx, horizonY, G);
+    drawZenRain(cx, horizonY, 3, G);
+    break;
+  }
+  case kThunder: {
+    drawMtnRidge(cx, horizonY, G);
+    // Striking bold lightning bolt
+    display.drawLine(cx - 30 * G, horizonY - 80 * G, cx - 10 * G,
+                     horizonY - 65 * G, GxEPD_RED);
+    display.drawLine(cx - 10 * G, horizonY - 65 * G, cx - 20 * G,
+                     horizonY - 65 * G, GxEPD_RED);
+    display.drawLine(cx - 20 * G, horizonY - 65 * G, cx + 5 * G,
+                     horizonY - 35 * G, GxEPD_RED);
+    // Thicken the top parts of the bolt for a tapering effect
+    display.drawLine(cx - 29 * G, horizonY - 80 * G, cx - 9 * G,
+                     horizonY - 65 * G, GxEPD_RED);
+    display.drawLine(cx - 9 * G, horizonY - 65 * G, cx - 19 * G,
+                     horizonY - 65 * G, GxEPD_RED);
+    display.drawLine(cx - 31 * G, horizonY - 80 * G, cx - 11 * G,
+                     horizonY - 65 * G, GxEPD_RED);
+    // Rain lines
+    int16_t th_rain[10][3] = {{-50, -70, 15}, {-40, -50, 10}, {-55, -30, 15},
+                              {-20, -75, 18}, {-10, -45, 12}, {15, -70, 20},
+                              {20, -45, 15},  {40, -60, 15},  {30, -35, 12},
+                              {50, -40, 12}};
+    for (int i = 0; i < 10; i++) {
+      int16_t rx = th_rain[i][0];
+      int16_t ry = th_rain[i][1];
+      int16_t rl = th_rain[i][2];
+      int16_t dx = (int16_t)(rl * G * 0.6f + 0.5f);
+      display.drawLine(cx + rx * G, horizonY + ry * G, cx + rx * G - dx,
+                       horizonY + ry * G + rl * G, GxEPD_BLACK);
     }
-    case kCloudy: {
-      drawMtnRidge(cx, horizonY);
-      display.fillCircle(cx - 42, horizonY - 53, 9, GxEPD_RED);
-      display.fillRect(cx - 57, horizonY - 53, 35, 15, GxEPD_WHITE);
-      for (int i = 0; i < 3; i++) {
-        display.drawFastHLine(cx - 62 + i * 5, horizonY - 53 + i * 4, 30, GxEPD_BLACK);
-      }
-      break;
+    break;
+  }
+  case kSnow: {
+    drawMtnRidge(cx, horizonY, G);
+    {
+      const float s = 0.45f * G;
+      int16_t peakX = cx;
+      int16_t peakY = horizonY + (int16_t)((300 - 450) * s);
+      // Snow cap on the mountain peak (white overlay above the ridge).
+      display.drawLine(peakX - 14 * G, peakY + 9 * G, peakX - 4 * G,
+                       peakY + 1 * G, GxEPD_WHITE);
+      display.drawLine(peakX - 4 * G, peakY + 1 * G, peakX + 6 * G,
+                       peakY + 10 * G, GxEPD_WHITE);
+      display.drawFastHLine(peakX - 14 * G, peakY + 9 * G, 20 * G, GxEPD_WHITE);
     }
-    case kOvercast: {
-      drawMtnRidge(cx, horizonY);
-      drawZenCloud(cx - 25, horizonY - 35, 1.2f);
-      drawZenCloud(cx + 25, horizonY - 50, 0.9f);
-      break;
-    }
-    case kLightRain: {
-      drawMtnRidge(cx, horizonY);
-      drawZenRain(cx, horizonY, 1);
-      break;
-    }
-    case kMediumRain: {
-      drawMtnRidge(cx, horizonY);
-      drawZenRain(cx, horizonY, 2);
-      break;
-    }
-    case kHeavyRain: {
-      drawMtnRidge(cx, horizonY);
-      drawZenRain(cx, horizonY, 3);
-      break;
-    }
-    case kThunder: {
-      drawMtnRidge(cx, horizonY);
-      // Striking bold lightning bolt
-      display.drawLine(cx - 30, horizonY - 80, cx - 10, horizonY - 65, GxEPD_RED);
-      display.drawLine(cx - 10, horizonY - 65, cx - 20, horizonY - 65, GxEPD_RED);
-      display.drawLine(cx - 20, horizonY - 65, cx + 5, horizonY - 35, GxEPD_RED);
-      // Thicken the top parts of the bolt for a tapering effect
-      display.drawLine(cx - 29, horizonY - 80, cx - 9, horizonY - 65, GxEPD_RED);
-      display.drawLine(cx - 9, horizonY - 65, cx - 19, horizonY - 65, GxEPD_RED);
-      display.drawLine(cx - 31, horizonY - 80, cx - 11, horizonY - 65, GxEPD_RED);
-      // Rain lines
-      int16_t th_rain[10][3] = {
-        {-50, -70, 15}, {-40, -50, 10}, {-55, -30, 15},
-        {-20, -75, 18}, {-10, -45, 12},
-        { 15, -70, 20}, { 20, -45, 15},
-        { 40, -60, 15}, { 30, -35, 12}, { 50, -40, 12}
-      };
-      for (int i = 0; i < 10; i++) {
-        int16_t rx = th_rain[i][0];
-        int16_t ry = th_rain[i][1];
-        int16_t rl = th_rain[i][2];
-        int16_t dx = (int16_t)(rl * 0.6f + 0.5f);
-        display.drawLine(cx + rx, horizonY + ry, cx + rx - dx, horizonY + ry + rl, GxEPD_BLACK);
-      }
-      break;
-    }
-    case kSnow: {
-      drawMtnRidge(cx, horizonY);
-      {
-        const float s = 0.45f;
-        int16_t peakX = cx;
-        int16_t peakY = horizonY + (int16_t)((300 - 450) * s);
-        // Snow cap on the mountain peak (white overlay above the ridge).
-        display.drawLine(peakX - 14, peakY + 9, peakX - 4, peakY + 1,
-                         GxEPD_WHITE);
-        display.drawLine(peakX - 4, peakY + 1, peakX + 6, peakY + 10,
-                         GxEPD_WHITE);
-        display.drawFastHLine(peakX - 14, peakY + 9, 20, GxEPD_WHITE);
-      }
-      drawNoTaskSnowflake(cx - 40, horizonY - 60, 4, GxEPD_BLACK);
-      drawNoTaskSnowflake(cx - 20, horizonY - 45, 3, GxEPD_BLACK);
-      drawNoTaskSnowflake(cx + 10, horizonY - 50, 4, GxEPD_BLACK);
-      drawNoTaskSnowflake(cx + 40, horizonY - 65, 3, GxEPD_BLACK);
-      drawNoTaskSnowflake(cx - 10, horizonY - 70, 3, GxEPD_BLACK);
-      break;
-    }
-    case kFog: {
-      drawMtnRidge(cx, horizonY);
-      // Obscure the middle of the mountain to let the peak peek out, exposing the left peak below it
-      display.fillRect(cx - 55, horizonY - 58, 110, 23, GxEPD_WHITE); // Erases hor-58 to hor-35
-      // Fog/haze layers
-      display.drawFastHLine(cx - 45, horizonY - 34, 40, GxEPD_BLACK);
-      display.drawFastHLine(cx + 10, horizonY - 37, 35, GxEPD_BLACK);
-      display.drawFastHLine(cx - 20, horizonY - 45, 50, GxEPD_BLACK);
-      display.drawFastHLine(cx - 10, horizonY - 51, 40, GxEPD_BLACK);
-      display.drawFastHLine(cx - 30, horizonY - 57, 30, GxEPD_BLACK);
-      display.drawFastHLine(cx + 5, horizonY - 55, 25, GxEPD_BLACK);
-      break;
-    }
-    case kSand: {
-      // Smooth Sand Dunes
-      display.drawLine(cx - 60, horizonY - 25, cx - 20, horizonY - 35, GxEPD_BLACK); display.drawLine(cx - 20, horizonY - 35, cx + 60, horizonY - 10, GxEPD_BLACK);
-      display.drawLine(cx - 60, horizonY - 10, cx + 10, horizonY - 25, GxEPD_BLACK); display.drawLine(cx + 10, horizonY - 25, cx + 60, horizonY - 5, GxEPD_BLACK);
-      // Wind lines
-      for (int i = 0; i < 5; i++) display.drawFastHLine(cx - 50 + i * 15, horizonY - 60 + i * 8, 20, GxEPD_RED);
-      break;
-    }
-    default: {
-      drawMtnRidge(cx, horizonY);
-      break;
-    }
+    drawNoTaskSnowflake(cx - 40 * G, horizonY - 60 * G, 4 * G, GxEPD_BLACK);
+    drawNoTaskSnowflake(cx - 20 * G, horizonY - 45 * G, 3 * G, GxEPD_BLACK);
+    drawNoTaskSnowflake(cx + 10 * G, horizonY - 50 * G, 4 * G, GxEPD_BLACK);
+    drawNoTaskSnowflake(cx + 40 * G, horizonY - 65 * G, 3 * G, GxEPD_BLACK);
+    drawNoTaskSnowflake(cx - 10 * G, horizonY - 70 * G, 3 * G, GxEPD_BLACK);
+    break;
+  }
+  case kFog: {
+    drawMtnRidge(cx, horizonY, G);
+    // Obscure the middle of the mountain to let the peak peek out, exposing the
+    // left peak below it
+    display.fillRect(cx - 55 * G, horizonY - 58 * G, 110 * G, 23 * G,
+                     GxEPD_WHITE); // Erases hor-58 to hor-35
+    // Fog/haze layers
+    display.drawFastHLine(cx - 45 * G, horizonY - 34 * G, 40 * G, GxEPD_BLACK);
+    display.drawFastHLine(cx + 10 * G, horizonY - 37 * G, 35 * G, GxEPD_BLACK);
+    display.drawFastHLine(cx - 20 * G, horizonY - 45 * G, 50 * G, GxEPD_BLACK);
+    display.drawFastHLine(cx - 10 * G, horizonY - 51 * G, 40 * G, GxEPD_BLACK);
+    display.drawFastHLine(cx - 30 * G, horizonY - 57 * G, 30 * G, GxEPD_BLACK);
+    display.drawFastHLine(cx + 5 * G, horizonY - 55 * G, 25 * G, GxEPD_BLACK);
+    break;
+  }
+  case kSand: {
+    // Smooth Sand Dunes
+    int16_t hor_old = cy + 34;
+    display.drawLine(cx - 60 * G, hor_old - 25 * G, cx - 20 * G,
+                     hor_old - 35 * G, GxEPD_BLACK);
+    display.drawLine(cx - 20 * G, hor_old - 35 * G, cx + 60 * G,
+                     hor_old - 10 * G, GxEPD_BLACK);
+    display.drawLine(cx - 60 * G, hor_old - 10 * G, cx + 10 * G,
+                     hor_old - 25 * G, GxEPD_BLACK);
+    display.drawLine(cx + 10 * G, hor_old - 25 * G, cx + 60 * G,
+                     hor_old - 5 * G, GxEPD_BLACK);
+    // Wind lines
+    for (int i = 0; i < 5; i++)
+      display.drawFastHLine(cx - 50 * G + i * 15 * G,
+                            hor_old - 60 * G + i * 8 * G, 20 * G, GxEPD_RED);
+    break;
+  }
+  default: {
+    drawMtnRidge(cx, horizonY, G);
+    break;
+  }
   }
 }
 
@@ -1233,25 +1283,46 @@ void drawTodoList() {
     Weather *wNow = weather_data_now();
     uint16_t nowIcon = (weather_status() == 1 && wNow) ? wNow->icon : 999;
 
+    int16_t horizonY = centerY + 42; // moved down a bit to use more space
+
     // Upper-half no-task scene varies by current weather.
-    drawNoTaskIllustration(centerX, centerY, nowIcon);
+    drawNoTaskIllustration(centerX, centerY, horizonY, nowIcon);
 
-    // Text line 1: "今日无待办" at mountain base (matches horizonY
-    // = SVG y=450 mapping).
-    int16_t horizonY = centerY + 34;
-    u8g2Fonts.setFont(FONT_SUB);
-    u8g2Fonts.setForegroundColor(GxEPD_BLACK);
-    const char *line1 = "今日无待办";
-    int16_t tw1 = u8g2Fonts.getUTF8Width(line1);
-    u8g2Fonts.setCursor(centerX - tw1 / 2, horizonY);
-    u8g2Fonts.print(line1);
+    if (noTaskWeather(nowIcon) == kSand) {
+      int16_t hor0 = centerY + 34;
 
-    // Text line 2: weather-aware subtitle.
-    horizonY += 16;
-    const char *line2 = noTaskSubtitle(nowIcon);
-    int16_t tw2 = u8g2Fonts.getUTF8Width(line2);
-    u8g2Fonts.setCursor(centerX - tw2 / 2, horizonY);
-    u8g2Fonts.print(line2);
+      // Text line 1: "今日无待办"
+      u8g2Fonts.setFont(FONT_TODO);
+      u8g2Fonts.setForegroundColor(GxEPD_BLACK);
+      const char *line1 = "今日无待办";
+      int16_t tw1 = u8g2Fonts.getUTF8Width(line1);
+      u8g2Fonts.setCursor(centerX - tw1 / 2, hor0 + 3);
+      u8g2Fonts.print(line1);
+
+      // Text line 2: weather-aware subtitle.
+      int16_t y2 = hor0 + 19;
+      u8g2Fonts.setFont(FONT_SUB);
+      const char *line2 = noTaskSubtitle(nowIcon);
+      int16_t tw2 = u8g2Fonts.getUTF8Width(line2);
+      u8g2Fonts.setCursor(centerX - tw2 / 2, y2);
+      u8g2Fonts.print(line2);
+    } else {
+      // Text line 1: "今日无待办" (Larger font, drawn above the subtitle)
+      u8g2Fonts.setFont(FONT_TODO); // Increase font size to 16px
+      u8g2Fonts.setForegroundColor(GxEPD_BLACK);
+      const char *line1 = "今日无待办";
+      int16_t tw1 = u8g2Fonts.getUTF8Width(line1);
+      u8g2Fonts.setCursor(centerX - tw1 / 2, horizonY - 13);
+      u8g2Fonts.print(line1);
+
+      // Text line 2: weather-aware subtitle. (Baseline at the bottom of the
+      // mountain)
+      u8g2Fonts.setFont(FONT_SUB);
+      const char *line2 = noTaskSubtitle(nowIcon);
+      int16_t tw2 = u8g2Fonts.getUTF8Width(line2);
+      u8g2Fonts.setCursor(centerX - tw2 / 2, horizonY + 3);
+      u8g2Fonts.print(line2);
+    }
 
     // Horizontal Split Line (moved up to 262 to shrink the no-tasks area and
     // maximize space)
@@ -1547,8 +1618,6 @@ void task_screen(void *param) {
   SensorData indoor = cachedSensorData;
   Weather *weather = weather_data_now();
   DailyForecast *forecast = weather_data_daily();
-
-
 
   // Calculate dynamic calendar day height based on actual month row count
   // Calendar rows expand to fill space between header and fixed weather panel
