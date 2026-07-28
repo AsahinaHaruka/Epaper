@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Epaper 今日无待办 - 天气场景预览</title>
+  <style>
+    :root { --ink:#181818; --red:#d22e2e; --paper:#f6f1e7; --panel:#fffdf8; --grid:rgba(0,0,0,.08); }
+    * { box-sizing: border-box; }
+    body { margin:0; padding:24px; background:var(--paper); color:var(--ink);
+      font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",system-ui,sans-serif; }
+    h1 { font-size:18px; margin:0 0 4px; font-weight:600; }
+    p.lede { margin:0 0 20px; color:#555; font-size:13px; }
+    code { background:#eee; padding:1px 4px; border-radius:3px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:18px; }
+    .cell { background:var(--panel); border:1px solid var(--grid); border-radius:10px; padding:14px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+    .cell header b { font-size:14px; }
+    .meta { font-size:12px; color:#777; margin-top:4px; font-family:ui-monospace,SFMono-Regular,monospace; }
+    canvas { display:block; width:100%; height:auto; background:#fff; border-radius:4px; image-rendering:pixelated; }
+    .legend { margin-top:16px; font-size:12px; color:#555; }
+  </style>
+</head>
+<body>
+  <h1>Epaper 「今日无待办」场景预览</h1>
+  <p class="lede">根据 <code>weather_data_now()->icon</code> 的和风天气代码选取不同场景。下面是每一类（合并多张代码后的代表画面）。</p>
+  <div class="grid" id="grid"></div>
+  <div class="legend">红 = GxEPD_RED，黑 = GxEPD_BLACK，白 = GxEPD_WHITE（白色绘制相当于擦除）。画布比例与右侧面板（CLOCK_W=312，标题下方至 Y=262）一致。</div>
+  <script>
+  const Eink_W = "#ffffff", Eink_B = "#181818", Eink_R = "#d22e2e";
+  const SCALE = 0.45;
+  const PANEL_W = 312, SCREEN_BASE = 135, TITLE_Y_BASE = 262;
+  function makeCtx(c) {
+    return {
+      drawLine(x0,y0,x1,y1,col){ c.strokeStyle=col; c.beginPath(); c.moveTo(x0+.5,y0+.5); c.lineTo(x1+.5,y1+.5); c.stroke(); },
+      drawCircle(cx,cy,r,col){ if(r<0)return; c.strokeStyle=col; c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2); c.stroke(); },
+      fillCircle(cx,cy,r,col){ if(r<0)return; c.fillStyle=col; c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2); c.fill(); },
+      fillRect(x,y,w,h,col){ c.fillStyle=col; c.fillRect(x,y,w,h); },
+      drawFastVLine(x,y,len,col){ c.fillStyle=col; c.fillRect(x,y,1,len); },
+      drawFastHLine(x,y,len,col){ c.fillStyle=col; c.fillRect(x,y,len,1); },
+      text(s,x,y,col,size){ c.fillStyle=col; c.font=(size||12)+"px 'PingFang SC','Noto Sans CJK SC',sans-serif"; c.textAlign="center"; c.textBaseline="alphabetic"; c.fillText(s,x,y); }
+    };
+  }
+  function kind(icon){
+    icon = String(icon);
+    if (icon === "100") return "clear";
+    if (icon === "150") return "clearNight";
+    if (icon >= "101" && icon <= "103") return "cloudy";
+    if (icon === "104") return "overcast";
+    if (["300", "305", "309", "314"].includes(icon)) return "lightRain";
+    if (["306", "399"].includes(icon)) return "mediumRain";
+    if (["301", "307", "308", "315", "316", "317", "318"].includes(icon)) return "heavyRain";
+    if (["302", "303", "304", "310", "311", "312", "313"].includes(icon)) return "thunder";
+    if (icon >= "400" && icon <= "499") return "snow";
+    if (["500", "501", "502", "509", "510", "514", "515"].includes(icon)) return "fog";
+    if (["503", "504", "507", "508"].includes(icon)) return "sand";
+    return "clear";
+  }
+  function subtitle(icon) {
+    const k = kind(icon);
+    switch(k) {
+      case "clear": return "阳光正好，轻松一下";
+      case "clearNight": return "月色温柔，安然入梦";
+      case "cloudy": return "云淡风轻，悠闲一天";
+      case "overcast": return "天色阴沉，慢享时光";
+      case "lightRain": return "窗外细雨，适合休息";
+      case "mediumRain": return "雨声淅沥，适合休息";
+      case "heavyRain": return "雨大风急，安心在家";
+      case "thunder": return "雷雨交加，安心在家";
+      case "snow": return "雪花轻落，万物静谧";
+      case "fog": return "雾气朦胧，慢度时光";
+      case "sand": return "风沙漫天，缩进屋中";
+      default: return "Enjoy your day";
+    }
+  }
+  function drawMtnRidge(d, cx, hor) {
+    const s = 0.45;
+    const mx = sx => cx + (sx - 270) * s;
+    const my = sy => hor + (sy - 450) * s;
+    for (let dd = -1; dd <= 1; dd++) {
+      d.drawLine(mx(130), my(450)+dd, mx(180), my(380)+dd, Eink_B);
+      d.drawLine(mx(180), my(380)+dd, mx(210), my(400)+dd, Eink_B);
+      d.drawLine(mx(210), my(400)+dd, mx(270), my(300)+dd, Eink_B);
+      d.drawLine(mx(270), my(300)+dd, mx(320), my(370)+dd, Eink_B);
+      d.drawLine(mx(320), my(370)+dd, mx(350), my(350)+dd, Eink_B);
+      d.drawLine(mx(350), my(350)+dd, mx(400), my(450)+dd, Eink_B);
+      d.drawLine(mx(210), my(400)+dd, mx(250), my(370)+dd, Eink_B);
+      d.drawLine(mx(250), my(370)+dd, mx(270), my(300)+dd, Eink_B);
+    }
+  }
+
+  function drawZenCloud(d, cx, cyb, s=1.0) {
+    const dx = v => Math.round(v * s);
+    const dy = v => cyb - Math.round(v * s);
+    // Erase interior with white shapes so mountain doesn't show through
+    d.fillCircle(cx - dx(14), dy(6), dx(7), Eink_W);
+    d.fillCircle(cx, dy(10), dx(10), Eink_W);
+    d.fillCircle(cx + dx(14), dy(6), dx(7), Eink_W);
+    d.fillRect(cx - dx(15), dy(8), dx(30), dx(9), Eink_W);
+    
+    // Draw outline
+    d.drawLine(cx - dx(18), cyb, cx + dx(18), cyb, Eink_B);
+    d.drawLine(cx - dx(18), cyb, cx - dx(24), dy(4), Eink_B);
+    d.drawLine(cx - dx(24), dy(4), cx - dx(22), dy(10), Eink_B);
+    d.drawLine(cx - dx(22), dy(10), cx - dx(14), dy(12), Eink_B);
+    d.drawLine(cx - dx(14), dy(12), cx - dx(10), dy(18), Eink_B);
+    d.drawLine(cx - dx(10), dy(18), cx + dx(6), dy(19), Eink_B);
+    d.drawLine(cx + dx(6), dy(19), cx + dx(12), dy(14), Eink_B);
+    d.drawLine(cx + dx(12), dy(14), cx + dx(20), dy(11), Eink_B);
+    d.drawLine(cx + dx(20), dy(11), cx + dx(24), dy(5), Eink_B);
+    d.drawLine(cx + dx(24), dy(5), cx + dx(18), cyb, Eink_B);
+  }
+
+  function drawZenFlake(d, x, y, s) {
+    d.drawLine(x-s, y, x+s, y, Eink_B);
+    d.drawLine(x, y-s, x, y+s, Eink_B);
+    d.drawLine(x-s*0.7, y-s*0.7, x+s*0.7, y+s*0.7, Eink_B);
+    d.drawLine(x-s*0.7, y+s*0.7, x+s*0.7, y-s*0.7, Eink_B);
+  }
+
+  function drawZenRain(d, cx, hor, intensity) {
+    let rain = [
+      [-45, -50, 10], [-10, -65, 12], [ 10, -45, 15], [ 30, -35, 12]
+    ];
+    if (intensity >= 2) {
+      rain.push([-30, -75, 18], [ -5, -40, 15], [ 35, -60, 15], [-50, -30, 15]);
+    }
+    if (intensity >= 3) {
+      rain.push([-55, -70, 15], [-25, -45, 12], [-35, -20, 10], [ -15, -15, 8], [ 15, -70, 20], [  5, -25, 10], [ 55, -65, 18], [ 50, -40, 12]);
+    }
+    
+    for(let [rx, ry, rl] of rain) {
+      let dx = Math.round(rl * 0.6);
+      d.drawLine(cx + rx, hor + ry, cx + rx - dx, hor + ry + rl, Eink_B);
+    }
+  }
+
+  function drawScene(d,cx,cy,icon){
+    const hor=cy+34;
+    switch(kind(icon)){
+      case "clear": 
+        drawMtnRidge(d,cx,hor); 
+        d.fillCircle(cx-35, hor-50, 10, Eink_R);
+        d.drawLine(cx+30, hor-70, cx+34, hor-66, Eink_B); d.drawLine(cx+34, hor-66, cx+38, hor-70, Eink_B);
+        d.drawLine(cx+42, hor-65, cx+45, hor-62, Eink_B); d.drawLine(cx+45, hor-62, cx+48, hor-65, Eink_B);
+        break;
+      case "clearNight":
+        drawMtnRidge(d,cx,hor);
+        d.fillCircle(cx-35, hor-50, 9, Eink_B);
+        d.fillCircle(cx-32, hor-52, 8, Eink_W);
+        // Stars
+        d.fillRect(cx-10, hor-75, 2, 2, Eink_B);
+        d.fillRect(cx+25, hor-60, 2, 2, Eink_B);
+        d.fillRect(cx+45, hor-70, 2, 2, Eink_B);
+        break;
+      case "cloudy":
+        drawMtnRidge(d,cx,hor);
+        d.fillCircle(cx-42, hor-53, 9, Eink_R);
+        d.fillRect(cx-57, hor-53, 35, 15, Eink_W);
+        for(let i=0; i<3; i++) d.drawFastHLine(cx-62+i*5, hor-53+i*4, 30, Eink_B);
+        break;
+      case "overcast":
+        drawMtnRidge(d,cx,hor);
+        drawZenCloud(d, cx-25, hor-35, 1.2);
+        drawZenCloud(d, cx+25, hor-50, 0.9);
+        break;
+      case "lightRain":
+        drawMtnRidge(d,cx,hor);
+        drawZenRain(d, cx, hor, 1);
+        break;
+      case "mediumRain":
+        drawMtnRidge(d,cx,hor);
+        drawZenRain(d, cx, hor, 2);
+        break;
+      case "heavyRain":
+        drawMtnRidge(d,cx,hor);
+        drawZenRain(d, cx, hor, 3);
+        break;
+      case "thunder":
+        drawMtnRidge(d,cx,hor);
+        // Striking bold lightning bolt
+        d.drawLine(cx-30, hor-80, cx-10, hor-65, Eink_R);
+        d.drawLine(cx-10, hor-65, cx-20, hor-65, Eink_R);
+        d.drawLine(cx-20, hor-65, cx+5,  hor-35, Eink_R);
+        // Thicken the top parts of the bolt for a tapering effect
+        d.drawLine(cx-29, hor-80, cx-9, hor-65, Eink_R);
+        d.drawLine(cx-9,  hor-65, cx-19, hor-65, Eink_R);
+        d.drawLine(cx-31, hor-80, cx-11, hor-65, Eink_R);
+        // Rain lines
+        const th_rain = [
+          [-50, -70, 15], [-40, -50, 10], [-55, -30, 15],
+          [-20, -75, 18], [-10, -45, 12],
+          [ 15, -70, 20], [ 20, -45, 15],
+          [ 40, -60, 15], [ 30, -35, 12], [ 50, -40, 12]
+        ];
+        for(let [rx, ry, rl] of th_rain) {
+          let dx = Math.round(rl * 0.6);
+          d.drawLine(cx + rx, hor + ry, cx + rx - dx, hor + ry + rl, Eink_B);
+        }
+        break;
+      case "snow":
+        drawMtnRidge(d,cx,hor);
+        {
+          const s = 0.45;
+          const px = cx, py = hor + (300-450)*s;
+          d.drawLine(px-14, py+9, px-4, py+1, Eink_W);
+          d.drawLine(px-4, py+1, px+6, py+10, Eink_W);
+          d.drawFastHLine(px-14, py+9, 20, Eink_W);
+        }
+        drawZenFlake(d, cx-40, hor-60, 4);
+        drawZenFlake(d, cx-20, hor-45, 3);
+        drawZenFlake(d, cx+10, hor-50, 4);
+        drawZenFlake(d, cx+40, hor-65, 3);
+        drawZenFlake(d, cx-10, hor-70, 3);
+        break;
+      case "fog":
+        drawMtnRidge(d,cx,hor);
+        // Obscure the middle of the mountain to let the peak peek out, exposing the left peak below it
+        d.fillRect(cx - 55, hor - 58, 110, 23, Eink_W); // Erases hor-58 to hor-35
+        // Fog/haze layers
+        d.drawFastHLine(cx - 45, hor - 34, 40, Eink_B);
+        d.drawFastHLine(cx + 10, hor - 37, 35, Eink_B);
+        d.drawFastHLine(cx - 20, hor - 45, 50, Eink_B);
+        d.drawFastHLine(cx - 10, hor - 51, 40, Eink_B);
+        d.drawFastHLine(cx - 30, hor - 57, 30, Eink_B);
+        d.drawFastHLine(cx +  5, hor - 55, 25, Eink_B);
+        break;
+      case "sand":
+        d.drawLine(cx-60, hor-25, cx-20, hor-35, Eink_B); d.drawLine(cx-20, hor-35, cx+60, hor-10, Eink_B);
+        d.drawLine(cx-60, hor-10, cx+10, hor-25, Eink_B); d.drawLine(cx+10, hor-25, cx+60, hor-5, Eink_B);
+        for(let i=0; i<5; i++) d.drawFastHLine(cx-50+i*15, hor-60+i*8, 20, Eink_R);
+        // Note: Horizon line and Red Seal have been removed to not obscure the text below.
+        break;
+      default: drawMtnRidge(d,cx,hor); break;
+    }
+    const hor0=cy+34;
+    d.text("今日无待办",cx,hor0,Eink_B,13);
+    d.text(subtitle(icon),cx,hor0+16,Eink_B,12);
+    d.drawFastHLine(20,TITLE_Y_BASE-SCREEN_BASE,PANEL_W-40,Eink_B);
+  }
+  const cases = [
+    { icon:100, name:"晴（白天）", code:"100 晴" },
+    { icon:150, name:"晴（夜晚）", code:"150 夜晴" },
+    { icon:102, name:"晴间/少云", code:"102 少云 / 101 多云 / 103 晴间多云" },
+    { icon:104, name:"阴", code:"104 阴" },
+    { icon:305, name:"小雨", code:"305 小雨 / 300 阵雨" },
+    { icon:306, name:"中雨", code:"306 中雨 / 399 雨" },
+    { icon:307, name:"大雨", code:"307 大雨 / 308 暴雨" },
+    { icon:302, name:"雷阵雨", code:"302 雷阵雨 / 304 雷阵雨伴冰雹" },
+    { icon:401, name:"雪", code:"401 中雪 / 400 小雪 / 499 雪" },
+    { icon:501, name:"雾/霾", code:"501 雾 / 500 薄雾 / 502 霾" },
+    { icon:507, name:"沙尘/大风", code:"507 沙尘暴 / 503 扬沙 / 515 沙风" },
+    { icon:999, name:"未知/无数据", code:"weather_data_now 无有效数据时回退" }
+  ];
+  const grid = document.getElementById("grid");
+  for (const c of cases) {
+    const cell=document.createElement("div"); cell.className="cell";
+    const header=document.createElement("header"); header.innerHTML="<b>"+c.name+"</b>";
+    const meta=document.createElement("div"); meta.className="meta"; meta.textContent="icon="+c.icon+"（"+c.code+"）";
+    const canvas=document.createElement("canvas"); canvas.width=PANEL_W; canvas.height=145;
+    const ctx=canvas.getContext("2d");
+    ctx.fillStyle="#fff"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.save(); ctx.translate(0,-SCREEN_BASE);
+    drawScene(makeCtx(ctx), PANEL_W / 2, 205, c.icon);
+    ctx.restore();
+    cell.appendChild(header); cell.appendChild(canvas); cell.appendChild(meta);
+    grid.appendChild(cell);
+  }
+  </script>
+</body>
+</html>
